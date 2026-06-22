@@ -1,29 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { StoreProvider, useStore } from "@/lib/store";
+import { Login } from "@/components/Login";
+import { BarberDashboard } from "@/components/BarberDashboard";
+import { AdminDashboard } from "@/components/AdminDashboard";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Your App" },
-      { name: "description", content: "Replace this with a one-sentence description of your app." },
-      { property: "og:title", content: "Your App" },
-      { property: "og:description", content: "Replace this with a one-sentence description of your app." },
+      { title: "Gamificação - Barbearia do Brunno" },
+      { name: "description", content: "Plano de carreira, missões e XP dos barbeiros da Barbearia do Brunno." },
+      { property: "og:title", content: "Gamificação - Barbearia do Brunno" },
+      { property: "og:description", content: "Plano de carreira, missões e XP dos barbeiros." },
     ],
   }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
-    </div>
+    <StoreProvider>
+      <App />
+    </StoreProvider>
   );
+}
+
+function App() {
+  const { currentUser } = useStore();
+  if (!currentUser) return <Login />;
+  if (currentUser.role === "admin") return <AdminDashboard />;
+  return <BarberDashboard user={currentUser} />;
 }
