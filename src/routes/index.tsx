@@ -30,5 +30,3 @@ function App() {
   if (currentUser.role === "admin") return <AdminDashboard />;
   return <BarberDashboard user={currentUser} />;
 }
-  );
-}
