@@ -212,3 +212,47 @@ export function BarberDashboard({ user }: { user: Barber }) {
     </div>
   );
 }
+
+function PillarCard({
+  icon,
+  emoji,
+  title,
+  subtitle,
+  value,
+  full,
+}: {
+  icon: React.ReactNode;
+  emoji: string;
+  title: string;
+  subtitle: string;
+  value: number;
+  full?: boolean;
+}) {
+  const tone =
+    value >= 80
+      ? "text-primary"
+      : value >= 60
+        ? "text-yellow-400"
+        : "text-destructive";
+  return (
+    <Card
+      className={`border-border bg-card p-4 transition-transform hover:-translate-y-0.5 hover:border-primary/40 ${full ? "sm:col-span-2" : ""}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+          <span aria-hidden className="text-lg">{emoji}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 font-semibold text-foreground">
+              {icon} {title}
+            </p>
+            <span className={`text-sm font-bold ${tone}`}>{value}%</span>
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+          <Progress value={value} className="mt-3 h-2" />
+        </div>
+      </div>
+    </Card>
+  );
+}
