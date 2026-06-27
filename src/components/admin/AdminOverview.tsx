@@ -54,22 +54,22 @@ export function AdminOverview() {
         <div className="h-80 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} layout="vertical" margin={{ left: 12, right: 24 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
+              <XAxis type="number" stroke="var(--muted-foreground)" fontSize={12} />
               <YAxis
                 dataKey="name"
                 type="category"
-                stroke="hsl(var(--muted-foreground))"
+                stroke="var(--muted-foreground)"
                 fontSize={12}
                 width={90}
               />
               <Tooltip
-                cursor={{ fill: "hsl(var(--muted) / 0.3)" }}
+                cursor={{ fill: "color-mix(in oklch, var(--muted) 30%, transparent)" }}
                 contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
+                  background: "var(--card)",
+                  border: "1px solid var(--border)",
                   borderRadius: 8,
-                  color: "hsl(var(--foreground))",
+                  color: "var(--foreground)",
                 }}
               />
               <Bar dataKey="xp" fill="#28a745" radius={[0, 6, 6, 0]} />
