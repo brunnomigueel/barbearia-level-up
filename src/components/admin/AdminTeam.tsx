@@ -19,7 +19,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export function AdminTeam() {
-  const { users, adjustXp } = useStore();
+  const { users, adjustXp, levels } = useStore();
   const barbers = users.filter((u) => u.role === "barber") as Barber[];
   const [selected, setSelected] = useState<Barber | null>(null);
 
@@ -34,7 +34,7 @@ export function AdminTeam() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {barbers.map((b) => {
-          const level = getLevel(b.xp);
+          const level = getLevel(b.xp, levels);
           const initials = b.name
             .split(" ")
             .map((p) => p[0])

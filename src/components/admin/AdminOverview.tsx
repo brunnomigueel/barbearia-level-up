@@ -12,7 +12,7 @@ import {
 } from "recharts";
 
 export function AdminOverview() {
-  const { users, missions } = useStore();
+  const { users, missions, levels } = useStore();
   const barbers = users.filter((u) => u.role === "barber") as Barber[];
   const pending = missions.filter((m) => m.status === "Pendente").length;
   const top = [...barbers].sort((a, b) => b.xp - a.xp)[0];
@@ -39,7 +39,7 @@ export function AdminOverview() {
           icon={<Crown className="h-5 w-5 text-primary" />}
           label="Melhor Barbeiro do Mês"
           value={top?.name ?? "—"}
-          hint={top ? `${top.xp} XP • ${getLevel(top.xp).name}` : ""}
+          hint={top ? `${top.xp} XP • ${getLevel(top.xp, levels).name}` : ""}
         />
         <StatCard
           icon={<Users className="h-5 w-5 text-primary" />}

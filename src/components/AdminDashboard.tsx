@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { BarChart3, CheckSquare, LogOut, Settings, Users } from "lucide-react";
+import { BarChart3, CheckSquare, LogOut, Settings, ShieldCheck, Users } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -20,13 +20,15 @@ import { AdminOverview } from "@/components/admin/AdminOverview";
 import { AdminApprovals } from "@/components/admin/AdminApprovals";
 import { AdminTeam } from "@/components/admin/AdminTeam";
 import { AdminMissions } from "@/components/admin/AdminMissions";
+import { AdminCareer } from "@/components/admin/AdminCareer";
 
-type View = "overview" | "approvals" | "team" | "missions";
+type View = "overview" | "approvals" | "team" | "missions" | "career";
 
 const NAV: { id: View; label: string; icon: typeof BarChart3 }[] = [
   { id: "overview", label: "Visão Geral", icon: BarChart3 },
   { id: "approvals", label: "Aprovações", icon: CheckSquare },
   { id: "team", label: "Gestão da Equipe", icon: Users },
+  { id: "career", label: "Plano de Carreira", icon: ShieldCheck },
   { id: "missions", label: "Missões e Regras", icon: Settings },
 ];
 
@@ -111,6 +113,7 @@ export function AdminDashboard() {
               {view === "overview" && <AdminOverview />}
               {view === "approvals" && <AdminApprovals />}
               {view === "team" && <AdminTeam />}
+              {view === "career" && <AdminCareer />}
               {view === "missions" && <AdminMissions />}
             </div>
           </main>

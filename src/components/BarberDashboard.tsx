@@ -1,5 +1,15 @@
 import { useMemo, useState } from "react";
-import { LogOut, Trophy, Sparkles, Send } from "lucide-react";
+import {
+  LogOut,
+  Trophy,
+  Sparkles,
+  Send,
+  DollarSign,
+  Handshake,
+  Scissors,
+  Shirt,
+  Rocket,
+} from "lucide-react";
 import {
   getLevel,
   getNextLevel,
@@ -28,11 +38,11 @@ function statusBadge(status: string) {
 }
 
 export function BarberDashboard({ user }: { user: Barber }) {
-  const { missions, submitMission, logout, users, missionTypes } = useStore();
+  const { missions, submitMission, logout, users, missionTypes, levels } = useStore();
   // refresh latest xp from store
   const me = (users.find((u) => u.cpf === user.cpf) as Barber) ?? user;
-  const level = getLevel(me.xp);
-  const next = getNextLevel(me.xp);
+  const level = getLevel(me.xp, levels);
+  const next = getNextLevel(me.xp, levels);
 
   const progressPct = useMemo(() => {
     if (!next) return 100;
@@ -96,6 +106,51 @@ export function BarberDashboard({ user }: { user: Barber }) {
           </p>
         </Card>
 
+        <section className="mb-6">
+          <div className="mb-3 flex items-end justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Pilares de Competência</h2>
+            <p className="text-xs text-muted-foreground">Onde você brilha e onde evoluir</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PillarCard
+              icon={<DollarSign className="h-4 w-4" />}
+              emoji="💰"
+              title="Resultado"
+              subtitle="Faturamento, ticket médio, vendas, assinaturas"
+              value={me.pillars.resultado}
+            />
+            <PillarCard
+              icon={<Handshake className="h-4 w-4" />}
+              emoji="🤝"
+              title="Relacionamento"
+              subtitle="Avaliações de clientes e postura com a equipe"
+              value={me.pillars.relacionamento}
+            />
+            <PillarCard
+              icon={<Scissors className="h-4 w-4" />}
+              emoji="✂️"
+              title="Técnica"
+              subtitle="Cursos externos e domínio de serviços premium"
+              value={me.pillars.tecnica}
+            />
+            <PillarCard
+              icon={<Shirt className="h-4 w-4" />}
+              emoji="👔"
+              title="Imagem Pessoal"
+              subtitle="Uniformização, postura e asseio visual"
+              value={me.pillars.imagem}
+            />
+            <PillarCard
+              icon={<Rocket className="h-4 w-4" />}
+              emoji="🚀"
+              title="Cultura"
+              subtitle="Stories diários e mín. 10 vídeos / mês no Instagram"
+              value={me.pillars.cultura}
+              full
+            />
+          </div>
+        </section>
+
         <Card className="mb-6 border-border bg-card p-5">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
             <Sparkles className="h-5 w-5 text-primary" /> Nova Missão
@@ -155,5 +210,49 @@ export function BarberDashboard({ user }: { user: Barber }) {
         </Card>
       </div>
     </div>
+  );
+}
+
+function PillarCard({
+  icon,
+  emoji,
+  title,
+  subtitle,
+  value,
+  full,
+}: {
+  icon: React.ReactNode;
+  emoji: string;
+  title: string;
+  subtitle: string;
+  value: number;
+  full?: boolean;
+}) {
+  const tone =
+    value >= 80
+      ? "text-primary"
+      : value >= 60
+        ? "text-yellow-400"
+        : "text-destructive";
+  return (
+    <Card
+      className={`border-border bg-card p-4 transition-transform hover:-translate-y-0.5 hover:border-primary/40 ${full ? "sm:col-span-2" : ""}`}
+    >
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+          <span aria-hidden className="text-lg">{emoji}</span>
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="flex items-center gap-1.5 font-semibold text-foreground">
+              {icon} {title}
+            </p>
+            <span className={`text-sm font-bold ${tone}`}>{value}%</span>
+          </div>
+          <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>
+          <Progress value={value} className="mt-3 h-2" />
+        </div>
+      </div>
+    </Card>
   );
 }
