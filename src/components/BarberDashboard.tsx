@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { LogOut, Trophy, Sparkles, Send } from "lucide-react";
 import {
-  MISSION_TYPES,
   getLevel,
   getNextLevel,
   useStore,
@@ -29,7 +28,7 @@ function statusBadge(status: string) {
 }
 
 export function BarberDashboard({ user }: { user: Barber }) {
-  const { missions, submitMission, logout, users } = useStore();
+  const { missions, submitMission, logout, users, missionTypes } = useStore();
   // refresh latest xp from store
   const me = (users.find((u) => u.cpf === user.cpf) as Barber) ?? user;
   const level = getLevel(me.xp);
@@ -107,7 +106,7 @@ export function BarberDashboard({ user }: { user: Barber }) {
                 <SelectValue placeholder="Selecione a missão" />
               </SelectTrigger>
               <SelectContent>
-                {MISSION_TYPES.map((m) => (
+                {missionTypes.map((m) => (
                   <SelectItem key={m.id} value={m.id}>
                     {m.name} (+{m.xp} XP)
                   </SelectItem>
@@ -133,7 +132,7 @@ export function BarberDashboard({ user }: { user: Barber }) {
           ) : (
             <ul className="divide-y divide-border">
               {myMissions.map((m) => {
-                const type = MISSION_TYPES.find((t) => t.id === m.typeId);
+                const type = missionTypes.find((t) => t.id === m.typeId);
                 return (
                   <li key={m.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                     <div className="min-w-0">
