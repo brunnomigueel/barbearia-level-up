@@ -1,5 +1,15 @@
 import { useMemo, useState } from "react";
-import { LogOut, Trophy, Sparkles, Send } from "lucide-react";
+import {
+  LogOut,
+  Trophy,
+  Sparkles,
+  Send,
+  DollarSign,
+  Handshake,
+  Scissors,
+  Shirt,
+  Rocket,
+} from "lucide-react";
 import {
   getLevel,
   getNextLevel,
@@ -28,11 +38,11 @@ function statusBadge(status: string) {
 }
 
 export function BarberDashboard({ user }: { user: Barber }) {
-  const { missions, submitMission, logout, users, missionTypes } = useStore();
+  const { missions, submitMission, logout, users, missionTypes, levels } = useStore();
   // refresh latest xp from store
   const me = (users.find((u) => u.cpf === user.cpf) as Barber) ?? user;
-  const level = getLevel(me.xp);
-  const next = getNextLevel(me.xp);
+  const level = getLevel(me.xp, levels);
+  const next = getNextLevel(me.xp, levels);
 
   const progressPct = useMemo(() => {
     if (!next) return 100;
@@ -95,6 +105,51 @@ export function BarberDashboard({ user }: { user: Barber }) {
               : "Parabéns, você atingiu o nível máximo!"}
           </p>
         </Card>
+
+        <section className="mb-6">
+          <div className="mb-3 flex items-end justify-between">
+            <h2 className="text-lg font-semibold text-foreground">Pilares de Competência</h2>
+            <p className="text-xs text-muted-foreground">Onde você brilha e onde evoluir</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PillarCard
+              icon={<DollarSign className="h-4 w-4" />}
+              emoji="💰"
+              title="Resultado"
+              subtitle="Faturamento, ticket médio, vendas, assinaturas"
+              value={me.pillars.resultado}
+            />
+            <PillarCard
+              icon={<Handshake className="h-4 w-4" />}
+              emoji="🤝"
+              title="Relacionamento"
+              subtitle="Avaliações de clientes e postura com a equipe"
+              value={me.pillars.relacionamento}
+            />
+            <PillarCard
+              icon={<Scissors className="h-4 w-4" />}
+              emoji="✂️"
+              title="Técnica"
+              subtitle="Cursos externos e domínio de serviços premium"
+              value={me.pillars.tecnica}
+            />
+            <PillarCard
+              icon={<Shirt className="h-4 w-4" />}
+              emoji="👔"
+              title="Imagem Pessoal"
+              subtitle="Uniformização, postura e asseio visual"
+              value={me.pillars.imagem}
+            />
+            <PillarCard
+              icon={<Rocket className="h-4 w-4" />}
+              emoji="🚀"
+              title="Cultura"
+              subtitle="Stories diários e mín. 10 vídeos / mês no Instagram"
+              value={me.pillars.cultura}
+              full
+            />
+          </div>
+        </section>
 
         <Card className="mb-6 border-border bg-card p-5">
           <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
