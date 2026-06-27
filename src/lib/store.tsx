@@ -2,21 +2,24 @@ import { createContext, useContext, useState, type ReactNode } from "react";
 
 export type MissionStatus = "Pendente" | "Aprovado" | "Recusado";
 
+export type MissionCategory = "Serviço" | "Bônus" | "Cultura";
+
 export interface MissionType {
   id: string;
   name: string;
   xp: number;
+  category: MissionCategory;
 }
 
 export const MISSION_TYPES: MissionType[] = [
-  { id: "corte", name: "Corte Simples", xp: 10 },
-  { id: "estetica", name: "Serviço Extra - Estética", xp: 30 },
-  { id: "quimica", name: "Serviço Extra - Química", xp: 60 },
-  { id: "premium", name: "Serviço Premium / Visagismo", xp: 150 },
-  { id: "assinatura", name: "Venda de Assinatura", xp: 200 },
-  { id: "ima", name: "Ímã de Clientes Convertido", xp: 50 },
-  { id: "story", name: "Story no Instagram marcando a barbearia", xp: 10 },
-  { id: "academy", name: "Módulo Academy Concluído", xp: 100 },
+  { id: "corte", name: "Corte Simples", xp: 10, category: "Serviço" },
+  { id: "estetica", name: "Serviço Extra - Estética", xp: 30, category: "Serviço" },
+  { id: "quimica", name: "Serviço Extra - Química", xp: 60, category: "Serviço" },
+  { id: "premium", name: "Serviço Premium / Visagismo", xp: 150, category: "Serviço" },
+  { id: "assinatura", name: "Venda de Assinatura", xp: 200, category: "Bônus" },
+  { id: "ima", name: "Ímã de Clientes Convertido", xp: 50, category: "Bônus" },
+  { id: "story", name: "Story no Instagram marcando a barbearia", xp: 10, category: "Cultura" },
+  { id: "academy", name: "Módulo Academy Concluído", xp: 100, category: "Cultura" },
 ];
 
 export interface Level {
@@ -79,19 +82,33 @@ const INITIAL_USERS: User[] = [
 interface Store {
   users: User[];
   missions: Mission[];
+  missionTypes: MissionType[];
   currentUser: User | null;
   login: (cpf: string) => User | null;
   logout: () => void;
   submitMission: (typeId: string, note: string) => void;
   approveMission: (id: string) => void;
   rejectMission: (id: string) => void;
+  adjustXp: (cpf: string, delta: number, reason: string) => void;
+  addMissionType: (m: Omit<MissionType, "id">) => void;
+  updateMissionType: (id: string, patch: Partial<Omit<MissionType, "id">>) => void;
+  deleteMissionType: (id: string) => void;
 }
 
 const StoreContext = createContext<Store | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
-  const [missions, setMissions] = useState<Mission[]>([]);
+  const [missionTypes, setMissionTypes] = useState<MissionType[]>(MISSION_TYPES);
+  const [missions, setMissions] = useState<Mission[]>(() => {
+    // seed a few pending missions for demo
+    const now = Date.now();
+    return [
+      { id: crypto.randomUUID(), barberCpf: "111", typeId: "premium", note: "Cliente João - visagismo completo", status: "Pendente", createdAt: new Date(now - 3600_000).toISOString() },
+      { id: crypto.randomUUID(), barberCpf: "333", typeId: "assinatura", note: "Plano mensal vendido", status: "Pendente", createdAt: new Date(now - 7200_000).toISOString() },
+      { id: crypto.randomUUID(), barberCpf: "555", typeId: "story", note: "Story publicado hoje", status: "Pendente", createdAt: new Date(now - 1800_000).toISOString() },
+    ];
+  });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const login = (cpf: string) => {
@@ -119,7 +136,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setMissions((prev) => {
       const m = prev.find((x) => x.id === id);
       if (!m || m.status !== "Pendente") return prev;
-      const type = MISSION_TYPES.find((t) => t.id === m.typeId);
+      const type = missionTypes.find((t) => t.id === m.typeId);
       if (type) {
         setUsers((us) =>
           us.map((u) =>
@@ -139,9 +156,45 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const adjustXp = (cpf: string, delta: number, _reason: string) => {
+    setUsers((us) =>
+      us.map((u) =>
+        u.role === "barber" && u.cpf === cpf
+          ? { ...u, xp: Math.max(0, u.xp + delta) }
+          : u,
+      ),
+    );
+  };
+
+  const addMissionType = (m: Omit<MissionType, "id">) => {
+    setMissionTypes((prev) => [...prev, { ...m, id: crypto.randomUUID() }]);
+  };
+
+  const updateMissionType = (id: string, patch: Partial<Omit<MissionType, "id">>) => {
+    setMissionTypes((prev) => prev.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+  };
+
+  const deleteMissionType = (id: string) => {
+    setMissionTypes((prev) => prev.filter((t) => t.id !== id));
+  };
+
   return (
     <StoreContext.Provider
-      value={{ users, missions, currentUser, login, logout, submitMission, approveMission, rejectMission }}
+      value={{
+        users,
+        missions,
+        missionTypes,
+        currentUser,
+        login,
+        logout,
+        submitMission,
+        approveMission,
+        rejectMission,
+        adjustXp,
+        addMissionType,
+        updateMissionType,
+        deleteMissionType,
+      }}
     >
       {children}
     </StoreContext.Provider>
