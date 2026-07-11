@@ -3,7 +3,7 @@ import { Send, CheckCircle2, AlertCircle, Link as LinkIcon, RefreshCcw } from "l
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createServerFn } from "@tanstack/start";
+import { createServerFn } from "@tanstack/react-start";
 
 const sendToN8nFn = createServerFn({ method: "POST" })
   .validator((data: { url: string; note: string }) => data)
