@@ -1,4 +1,19 @@
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { db } from "@/lib/firebase";
+import {
+  collection,
+  doc,
+  addDoc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  where,
+  type DocumentData,
+} from "firebase/firestore";
+
+// ─── Types ──────────────────────────────────────────────────────
 
 export type MissionStatus = "Pendente" | "Aprovado" | "Recusado";
 
@@ -67,11 +82,11 @@ export interface Level {
 }
 
 export interface LevelRequirements {
-  faturamento: number; // R$ alvo trimestral
-  ticketMedio: number; // R$
-  imas: number; // ímãs convertidos
-  videos: number; // vídeos / mês no Instagram
-  academy: number; // módulos academy
+  faturamento: number;
+  ticketMedio: number;
+  imas: number;
+  videos: number;
+  academy: number;
 }
 
 export const LEVELS: Level[] = [
@@ -126,7 +141,7 @@ export function getNextLevel(xp: number, levels: Level[] = LEVELS): Level | null
 export type PillarKey = "resultado" | "relacionamento" | "tecnica" | "imagem" | "cultura";
 
 export interface PillarScores {
-  resultado: number; // 0-100
+  resultado: number;
   relacionamento: number;
   tecnica: number;
   imagem: number;
@@ -178,7 +193,7 @@ export interface MissionSubmission {
 export interface DailyLog {
   id: string;
   barberCpf: string;
-  date: string; // YYYY-MM-DD
+  date: string;
   clientesAtendidos: number;
   servicosExtras: number;
   stories: number;
@@ -191,6 +206,44 @@ export interface DailyLog {
 
 export type DailyLogEntry = Omit<DailyLog, "id" | "barberCpf" | "createdAt">;
 
+// ─── Firestore helpers ──────────────────────────────────────────
+
+const COLLECTIONS = {
+  users: "users",
+  missions: "missions",
+  dailyLogs: "dailyLogs",
+} as const;
+
+function docToUser(d: DocumentData, id: string): User {
+  const data = d as Record<string, unknown>;
+  if (data.role === "admin") {
+    return { cpf: id, name: data.name as string, role: "admin" };
+  }
+  return {
+    cpf: id,
+    name: data.name as string,
+    xp: (data.xp as number) ?? 0,
+    role: "barber",
+    pillars: (data.pillars as PillarScores) ?? {
+      resultado: 50,
+      relacionamento: 50,
+      tecnica: 50,
+      imagem: 50,
+      cultura: 50,
+    },
+  };
+}
+
+function docToMission(d: DocumentData, id: string): Mission {
+  return { id, ...d } as Mission;
+}
+
+function docToDailyLog(d: DocumentData, id: string): DailyLog {
+  return { id, ...d } as DailyLog;
+}
+
+// ─── Initial seed data (only written once) ──────────────────────
+
 const INITIAL_USERS: User[] = [
   { cpf: "00000000000", name: "Brunno", role: "admin" },
   { cpf: "111", name: "Daniel Jordan", xp: 4500, role: "barber", pillars: { resultado: 85, relacionamento: 78, tecnica: 90, imagem: 92, cultura: 70 } },
@@ -200,6 +253,24 @@ const INITIAL_USERS: User[] = [
   { cpf: "555", name: "Felipe Gonçalves", xp: 400, role: "barber", pillars: { resultado: 30, relacionamento: 60, tecnica: 35, imagem: 65, cultura: 40 } },
 ];
 
+async function seedUsers() {
+  // Write initial users if collection is empty (first run)
+  for (const u of INITIAL_USERS) {
+    const ref = doc(db, COLLECTIONS.users, u.cpf);
+    if (u.role === "admin") {
+      await setDoc(ref, { name: u.name, role: u.role }, { merge: true });
+    } else {
+      await setDoc(
+        ref,
+        { name: u.name, role: u.role, xp: u.xp, pillars: u.pillars },
+        { merge: true },
+      );
+    }
+  }
+}
+
+// ─── Store Interface ────────────────────────────────────────────
+
 interface Store {
   users: User[];
   missions: Mission[];
@@ -207,6 +278,7 @@ interface Store {
   levels: Level[];
   dailyLogs: DailyLog[];
   currentUser: User | null;
+  loading: boolean;
   login: (cpf: string) => User | null;
   logout: () => void;
   submitMission: (submission: MissionSubmission) => void;
@@ -224,47 +296,57 @@ interface Store {
 
 const StoreContext = createContext<Store | null>(null);
 
+// ─── Provider ───────────────────────────────────────────────────
+
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>(INITIAL_USERS);
+  const [users, setUsers] = useState<User[]>([]);
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [dailyLogs, setDailyLogs] = useState<DailyLog[]>([]);
   const [missionTypes, setMissionTypes] = useState<MissionType[]>(MISSION_TYPES);
   const [levels, setLevels] = useState<Level[]>(LEVELS);
-  const [missions, setMissions] = useState<Mission[]>(() => {
-    // seed a few pending missions for demo
-    const now = Date.now();
-    return [
-      { id: crypto.randomUUID(), barberCpf: "111", typeId: "premium", note: "Cliente João - visagismo completo", status: "Pendente", createdAt: new Date(now - 3600_000).toISOString() },
-      { id: crypto.randomUUID(), barberCpf: "333", typeId: "assinatura", note: "Plano mensal vendido", status: "Pendente", createdAt: new Date(now - 7200_000).toISOString() },
-      { id: crypto.randomUUID(), barberCpf: "555", typeId: "story", note: "Story publicado hoje", status: "Pendente", createdAt: new Date(now - 1800_000).toISOString() },
-    ];
-  });
-  const [dailyLogs, setDailyLogs] = useState<DailyLog[]>(() => {
-    // seed demo daily logs
-    const today = new Date();
-    const logs: DailyLog[] = [];
-    const barbers = ["111", "222", "333", "444", "555"];
-    for (let d = 6; d >= 0; d--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - d);
-      const dateStr = date.toISOString().split("T")[0];
-      for (const cpf of barbers) {
-        logs.push({
-          id: crypto.randomUUID(),
-          barberCpf: cpf,
-          date: dateStr,
-          clientesAtendidos: Math.floor(Math.random() * 8) + 3,
-          servicosExtras: Math.floor(Math.random() * 4),
-          stories: Math.floor(Math.random() * 3),
-          imaClientes: Math.floor(Math.random() * 2),
-          assinaturas: Math.random() > 0.7 ? 1 : 0,
-          produtosVendidos: Math.floor(Math.random() * 3),
-          videosPostados: Math.random() > 0.6 ? 1 : 0,
-          createdAt: date.toISOString(),
-        });
-      }
-    }
-    return logs;
-  });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [seeded, setSeeded] = useState(false);
+
+  // Seed initial data on first load
+  useEffect(() => {
+    seedUsers().then(() => setSeeded(true));
+  }, []);
+
+  // Real-time listener: Users
+  useEffect(() => {
+    if (!seeded) return;
+    const unsub = onSnapshot(collection(db, COLLECTIONS.users), (snap) => {
+      const list = snap.docs.map((d) => docToUser(d.data(), d.id));
+      setUsers(list);
+      setLoading(false);
+    });
+    return unsub;
+  }, [seeded]);
+
+  // Real-time listener: Missions
+  useEffect(() => {
+    if (!seeded) return;
+    const unsub = onSnapshot(collection(db, COLLECTIONS.missions), (snap) => {
+      const list = snap.docs.map((d) => docToMission(d.data(), d.id));
+      // Sort by createdAt desc
+      list.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+      setMissions(list);
+    });
+    return unsub;
+  }, [seeded]);
+
+  // Real-time listener: DailyLogs
+  useEffect(() => {
+    if (!seeded) return;
+    const unsub = onSnapshot(collection(db, COLLECTIONS.dailyLogs), (snap) => {
+      const list = snap.docs.map((d) => docToDailyLog(d.data(), d.id));
+      setDailyLogs(list);
+    });
+    return unsub;
+  }, [seeded]);
+
+  // ─── Actions ──────────────────────────────────────────────────
 
   const login = (cpf: string) => {
     const u = users.find((x) => x.cpf === cpf.trim()) ?? null;
@@ -274,83 +356,71 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const logout = () => setCurrentUser(null);
 
-  const submitMission = (submission: MissionSubmission) => {
+  const submitMission = async (submission: MissionSubmission) => {
     if (!currentUser || currentUser.role !== "barber") return;
-    const m: Mission = {
-      id: crypto.randomUUID(),
+    const data = {
       barberCpf: currentUser.cpf,
       typeId: submission.typeId,
       note: submission.note,
-      status: "Pendente",
+      status: "Pendente" as MissionStatus,
       createdAt: new Date().toISOString(),
-      proofImage: submission.proofImage,
-      clientName: submission.clientName,
-      referredClient: submission.referredClient,
-      service: submission.service,
-      products: submission.products,
-      link: submission.link,
+      ...(submission.proofImage && { proofImage: submission.proofImage }),
+      ...(submission.clientName && { clientName: submission.clientName }),
+      ...(submission.referredClient && { referredClient: submission.referredClient }),
+      ...(submission.service && { service: submission.service }),
+      ...(submission.products && { products: submission.products }),
+      ...(submission.link && { link: submission.link }),
     };
-    setMissions((prev) => [m, ...prev]);
+    await addDoc(collection(db, COLLECTIONS.missions), data);
   };
 
-  const approveMission = (id: string) => {
-    setMissions((prev) => {
-      const m = prev.find((x) => x.id === id);
-      if (!m || m.status !== "Pendente") return prev;
-      const type = missionTypes.find((t) => t.id === m.typeId);
-      if (type) {
-        setUsers((us) =>
-          us.map((u) =>
-            u.role === "barber" && u.cpf === m.barberCpf
-              ? { ...u, xp: u.xp + type.xp }
-              : u,
-          ),
-        );
+  const approveMission = async (id: string) => {
+    const m = missions.find((x) => x.id === id);
+    if (!m || m.status !== "Pendente") return;
+    const type = missionTypes.find((t) => t.id === m.typeId);
+    // Update mission status
+    await updateDoc(doc(db, COLLECTIONS.missions, id), { status: "Aprovado" });
+    // Add XP to barber
+    if (type) {
+      const barber = users.find((u) => u.role === "barber" && u.cpf === m.barberCpf) as Barber | undefined;
+      if (barber) {
+        await updateDoc(doc(db, COLLECTIONS.users, m.barberCpf), {
+          xp: barber.xp + type.xp,
+        });
       }
-      return prev.map((x) => (x.id === id ? { ...x, status: "Aprovado" } : x));
-    });
+    }
   };
 
-  const rejectMission = (id: string) => {
-    setMissions((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, status: "Recusado" } : x)),
-    );
+  const rejectMission = async (id: string) => {
+    await updateDoc(doc(db, COLLECTIONS.missions, id), { status: "Recusado" });
   };
 
-  const adjustXp = (cpf: string, delta: number, _reason: string) => {
-    setUsers((us) =>
-      us.map((u) =>
-        u.role === "barber" && u.cpf === cpf
-          ? { ...u, xp: Math.max(0, u.xp + delta) }
-          : u,
-      ),
-    );
+  const adjustXp = async (cpf: string, delta: number, _reason: string) => {
+    const barber = users.find((u) => u.role === "barber" && u.cpf === cpf) as Barber | undefined;
+    if (barber) {
+      await updateDoc(doc(db, COLLECTIONS.users, cpf), {
+        xp: Math.max(0, barber.xp + delta),
+      });
+    }
   };
 
-  const addDailyLog = (entry: DailyLogEntry) => {
+  const addDailyLog = async (entry: DailyLogEntry) => {
     if (!currentUser || currentUser.role !== "barber") return;
-    // Check if there's already a log for this date — update it
+    // Check if log exists for this date
     const existing = dailyLogs.find(
       (l) => l.barberCpf === currentUser.cpf && l.date === entry.date,
     );
     if (existing) {
-      setDailyLogs((prev) =>
-        prev.map((l) =>
-          l.id === existing.id
-            ? { ...l, ...entry, createdAt: new Date().toISOString() }
-            : l,
-        ),
-      );
+      await updateDoc(doc(db, COLLECTIONS.dailyLogs, existing.id), {
+        ...entry,
+        createdAt: new Date().toISOString(),
+      });
     } else {
-      setDailyLogs((prev) => [
-        {
-          id: crypto.randomUUID(),
-          barberCpf: currentUser.cpf,
-          ...entry,
-          createdAt: new Date().toISOString(),
-        },
-        ...prev,
-      ]);
+      await addDoc(collection(db, COLLECTIONS.dailyLogs), {
+        barberCpf: currentUser.cpf,
+        ...entry,
+        createdAt: new Date().toISOString(),
+      });
     }
   };
 
@@ -381,6 +451,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         levels,
         dailyLogs,
         currentUser,
+        loading,
         login,
         logout,
         submitMission,

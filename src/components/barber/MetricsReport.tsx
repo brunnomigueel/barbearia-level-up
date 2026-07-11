@@ -300,7 +300,7 @@ export function MetricsReport({ user }: { user: Barber }) {
               <RequirementRow
                 label="Faturamento"
                 emoji="💰"
-                current={totals.clientesAtendidos * 50 ?? 0}
+                current={(totals.clientesAtendidos ?? 0) * 50}
                 target={next.requirements.faturamento}
                 suffix="/trimestre"
                 format="currency"
