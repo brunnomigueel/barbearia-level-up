@@ -3,6 +3,31 @@ import { Send, CheckCircle2, AlertCircle, Link as LinkIcon, RefreshCcw } from "l
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { createServerFn } from "@tanstack/start";
+
+const sendToN8nFn = createServerFn({ method: "POST" })
+  .validator((data: { url: string; note: string }) => data)
+  .handler(async ({ data }) => {
+    const webhookUrl = "https://n8n.brunnos.com.br/webhook/curation";
+    
+    const res = await fetch(webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url: data.url,
+        note: data.note,
+        timestamp: new Date().toISOString()
+      }),
+    });
+
+    if (!res.ok) {
+      throw new Error(`Falha no Webhook: ${res.statusText}`);
+    }
+
+    return { success: true };
+  });
 
 export function AdminCuration() {
   const [url, setUrl] = useState("");
@@ -16,24 +41,8 @@ export function AdminCuration() {
     setStatus("sending");
     
     try {
-      // Endpoint do Webhook do n8n (A ser configurado pelo usuário no n8n)
-      // Substituir pelo webhook real depois que for gerado no n8n
-      const webhookUrl = "https://n8n.brunnos.com.br/webhook/curation";
+      await sendToN8nFn({ data: { url, note } });
       
-      const res = await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          url,
-          note,
-          timestamp: new Date().toISOString()
-        }),
-      });
-
-      if (!res.ok) throw new Error("Falha no Webhook");
-
       setStatus("success");
       setUrl("");
       setNote("");
