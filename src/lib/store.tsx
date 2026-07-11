@@ -20,6 +20,42 @@ export const MISSION_TYPES: MissionType[] = [
   { id: "ima", name: "Ímã de Clientes Convertido", xp: 50, category: "Bônus" },
   { id: "story", name: "Story no Instagram marcando a barbearia", xp: 10, category: "Cultura" },
   { id: "academy", name: "Módulo Academy Concluído", xp: 100, category: "Cultura" },
+  { id: "video", name: "Vídeo no Instagram / Reels", xp: 15, category: "Cultura" },
+  { id: "venda_produto", name: "Venda de Produto", xp: 0, category: "Bônus" },
+];
+
+export interface Product {
+  id: string;
+  name: string;
+  xp: number;
+}
+
+export const PRODUCTS: Product[] = [
+  { id: "pomada", name: "Pomada Modeladora", xp: 15 },
+  { id: "shampoo", name: "Shampoo Profissional", xp: 10 },
+  { id: "balm", name: "Balm para Barba", xp: 12 },
+  { id: "oleo", name: "Óleo para Barba", xp: 12 },
+  { id: "cera", name: "Cera Capilar", xp: 15 },
+  { id: "tonic", name: "Tônico Capilar", xp: 18 },
+  { id: "kit", name: "Kit Barba Completo", xp: 30 },
+  { id: "perfume", name: "Perfume / Colônia", xp: 20 },
+  { id: "condicionador", name: "Condicionador", xp: 10 },
+  { id: "dermocosmético", name: "Dermocosmético", xp: 25 },
+];
+
+export const SERVICES = [
+  "Corte Simples",
+  "Corte + Barba",
+  "Barba",
+  "Pigmentação",
+  "Relaxamento",
+  "Progressiva",
+  "Platinado",
+  "Luzes",
+  "Visagismo",
+  "Hidratação",
+  "Sobrancelha",
+  "Outro",
 ];
 
 export interface Level {
@@ -120,7 +156,40 @@ export interface Mission {
   note: string;
   status: MissionStatus;
   createdAt: string;
+  proofImage?: string;
+  clientName?: string;
+  referredClient?: string;
+  service?: string;
+  products?: string[];
+  link?: string;
 }
+
+export interface MissionSubmission {
+  typeId: string;
+  note: string;
+  proofImage?: string;
+  clientName?: string;
+  referredClient?: string;
+  service?: string;
+  products?: string[];
+  link?: string;
+}
+
+export interface DailyLog {
+  id: string;
+  barberCpf: string;
+  date: string; // YYYY-MM-DD
+  clientesAtendidos: number;
+  servicosExtras: number;
+  stories: number;
+  imaClientes: number;
+  assinaturas: number;
+  produtosVendidos: number;
+  videosPostados: number;
+  createdAt: string;
+}
+
+export type DailyLogEntry = Omit<DailyLog, "id" | "barberCpf" | "createdAt">;
 
 const INITIAL_USERS: User[] = [
   { cpf: "00000000000", name: "Brunno", role: "admin" },
@@ -136,13 +205,15 @@ interface Store {
   missions: Mission[];
   missionTypes: MissionType[];
   levels: Level[];
+  dailyLogs: DailyLog[];
   currentUser: User | null;
   login: (cpf: string) => User | null;
   logout: () => void;
-  submitMission: (typeId: string, note: string) => void;
+  submitMission: (submission: MissionSubmission) => void;
   approveMission: (id: string) => void;
   rejectMission: (id: string) => void;
   adjustXp: (cpf: string, delta: number, reason: string) => void;
+  addDailyLog: (entry: DailyLogEntry) => void;
   addMissionType: (m: Omit<MissionType, "id">) => void;
   updateMissionType: (id: string, patch: Partial<Omit<MissionType, "id">>) => void;
   deleteMissionType: (id: string) => void;
@@ -166,6 +237,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       { id: crypto.randomUUID(), barberCpf: "555", typeId: "story", note: "Story publicado hoje", status: "Pendente", createdAt: new Date(now - 1800_000).toISOString() },
     ];
   });
+  const [dailyLogs, setDailyLogs] = useState<DailyLog[]>(() => {
+    // seed demo daily logs
+    const today = new Date();
+    const logs: DailyLog[] = [];
+    const barbers = ["111", "222", "333", "444", "555"];
+    for (let d = 6; d >= 0; d--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - d);
+      const dateStr = date.toISOString().split("T")[0];
+      for (const cpf of barbers) {
+        logs.push({
+          id: crypto.randomUUID(),
+          barberCpf: cpf,
+          date: dateStr,
+          clientesAtendidos: Math.floor(Math.random() * 8) + 3,
+          servicosExtras: Math.floor(Math.random() * 4),
+          stories: Math.floor(Math.random() * 3),
+          imaClientes: Math.floor(Math.random() * 2),
+          assinaturas: Math.random() > 0.7 ? 1 : 0,
+          produtosVendidos: Math.floor(Math.random() * 3),
+          videosPostados: Math.random() > 0.6 ? 1 : 0,
+          createdAt: date.toISOString(),
+        });
+      }
+    }
+    return logs;
+  });
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const login = (cpf: string) => {
@@ -176,15 +274,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const logout = () => setCurrentUser(null);
 
-  const submitMission = (typeId: string, note: string) => {
+  const submitMission = (submission: MissionSubmission) => {
     if (!currentUser || currentUser.role !== "barber") return;
     const m: Mission = {
       id: crypto.randomUUID(),
       barberCpf: currentUser.cpf,
-      typeId,
-      note,
+      typeId: submission.typeId,
+      note: submission.note,
       status: "Pendente",
       createdAt: new Date().toISOString(),
+      proofImage: submission.proofImage,
+      clientName: submission.clientName,
+      referredClient: submission.referredClient,
+      service: submission.service,
+      products: submission.products,
+      link: submission.link,
     };
     setMissions((prev) => [m, ...prev]);
   };
@@ -223,6 +327,33 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     );
   };
 
+  const addDailyLog = (entry: DailyLogEntry) => {
+    if (!currentUser || currentUser.role !== "barber") return;
+    // Check if there's already a log for this date — update it
+    const existing = dailyLogs.find(
+      (l) => l.barberCpf === currentUser.cpf && l.date === entry.date,
+    );
+    if (existing) {
+      setDailyLogs((prev) =>
+        prev.map((l) =>
+          l.id === existing.id
+            ? { ...l, ...entry, createdAt: new Date().toISOString() }
+            : l,
+        ),
+      );
+    } else {
+      setDailyLogs((prev) => [
+        {
+          id: crypto.randomUUID(),
+          barberCpf: currentUser.cpf,
+          ...entry,
+          createdAt: new Date().toISOString(),
+        },
+        ...prev,
+      ]);
+    }
+  };
+
   const addMissionType = (m: Omit<MissionType, "id">) => {
     setMissionTypes((prev) => [...prev, { ...m, id: crypto.randomUUID() }]);
   };
@@ -248,6 +379,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         missions,
         missionTypes,
         levels,
+        dailyLogs,
         currentUser,
         login,
         logout,
@@ -255,6 +387,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         approveMission,
         rejectMission,
         adjustXp,
+        addDailyLog,
         addMissionType,
         updateMissionType,
         deleteMissionType,
