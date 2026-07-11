@@ -21,11 +21,13 @@ import { AdminApprovals } from "@/components/admin/AdminApprovals";
 import { AdminTeam } from "@/components/admin/AdminTeam";
 import { AdminMissions } from "@/components/admin/AdminMissions";
 import { AdminCareer } from "@/components/admin/AdminCareer";
+import { AdminCuration } from "@/components/admin/AdminCuration";
 
-type View = "overview" | "approvals" | "team" | "missions" | "career";
+type View = "overview" | "approvals" | "team" | "missions" | "career" | "curation";
 
 const NAV: { id: View; label: string; icon: typeof BarChart3 }[] = [
   { id: "overview", label: "Visão Geral", icon: BarChart3 },
+  { id: "curation", label: "Hub de Curação", icon: ShieldCheck }, // Usando um icone existente temporariamente
   { id: "approvals", label: "Aprovações", icon: CheckSquare },
   { id: "team", label: "Gestão da Equipe", icon: Users },
   { id: "career", label: "Plano de Carreira", icon: ShieldCheck },
@@ -109,8 +111,9 @@ export function AdminDashboard() {
             </div>
           </header>
           <main className="flex-1 overflow-y-auto p-4 md:p-6">
-            <div className="mx-auto w-full max-w-6xl">
+            <div className="mx-auto max-w-6xl">
               {view === "overview" && <AdminOverview />}
+              {view === "curation" && <AdminCuration />}
               {view === "approvals" && <AdminApprovals />}
               {view === "team" && <AdminTeam />}
               {view === "career" && <AdminCareer />}
