@@ -56,25 +56,24 @@ function ArticlePage() {
   const article = Route.useLoaderData();
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] font-sans text-gray-200">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* Top Bar */}
-      <header className="bg-black/90 backdrop-blur border-b border-[#2a2a2a] py-5 px-6 sticky top-0 z-50">
+      <header className="bg-[#0033a0] text-white py-4 px-6 shadow-md sticky top-0 z-50">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <Link to="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-            <div className="w-8 h-8 flex items-center justify-center bg-[#d4af37] text-black font-serif font-bold text-xl">V</div>
-            <span className="text-xl font-serif tracking-widest text-[#d4af37] uppercase">Vero Eleganza</span>
+          <Link to="/" className="text-2xl font-serif tracking-wide uppercase hover:text-gray-200">
+            Barbearia do Brunno
           </Link>
         </div>
       </header>
 
       <main className="max-w-4xl mx-auto py-16 px-6">
-        <Link to="/" className="text-[#d4af37] hover:text-[#c5a059] transition-colors flex items-center gap-2 mb-10 font-medium uppercase tracking-widest text-sm">
-          <ArrowLeft className="w-4 h-4" /> Voltar às Coleções
+        <Link to="/" className="text-[#0033a0] hover:underline flex items-center gap-2 mb-10 font-medium uppercase tracking-widest text-sm">
+          <ArrowLeft className="w-4 h-4" /> Voltar ao Blog
         </Link>
 
         <article>
           <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight">
+            <h1 className="text-4xl md:text-6xl font-serif text-gray-900 mb-6 leading-tight">
               {article.title}
             </h1>
             <div className="flex items-center justify-center gap-4 text-gray-500 uppercase tracking-widest text-xs font-semibold">
@@ -86,48 +85,47 @@ function ArticlePage() {
                 })}
               </time>
               <span>•</span>
-              <span className="text-[#d4af37]">Jornal da Elegância</span>
+              <span className="text-[#0033a0]">Leitura de 5 min</span>
             </div>
           </div>
 
           {article.imageUrl && (
-            <div className="relative mb-16 shadow-2xl shadow-black">
+            <div className="relative mb-16 shadow-xl">
               <img 
                 src={article.imageUrl} 
                 alt={article.title} 
-                className="w-full h-[500px] object-cover mix-blend-luminosity opacity-80 border border-[#222]"
+                className="w-full h-[500px] object-cover"
               />
             </div>
           )}
 
           <div 
-            className="prose prose-lg prose-invert max-w-none text-gray-300 leading-relaxed font-light
-                       prose-headings:font-serif prose-headings:text-white prose-headings:font-normal
-                       prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:border-b prose-h2:border-[#222] prose-h2:pb-4
-                       prose-p:mb-8 prose-a:text-[#d4af37] prose-a:font-semibold hover:prose-a:text-[#c5a059]
-                       prose-img:border prose-img:border-[#222] prose-img:shadow-xl
-                       prose-strong:text-white prose-strong:font-semibold"
+            className="prose prose-lg prose-blue max-w-none text-gray-800 leading-relaxed font-light
+                       prose-headings:font-serif prose-headings:text-gray-900 prose-headings:font-normal
+                       prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:border-b prose-h2:border-gray-200 prose-h2:pb-4
+                       prose-p:mb-8 prose-a:text-[#0033a0] prose-a:font-semibold hover:prose-a:text-blue-800
+                       prose-img:shadow-xl
+                       prose-strong:text-gray-900 prose-strong:font-semibold"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
         </article>
 
-        {/* CTA Section (Gold Contrast Block) */}
-        <div className="mt-24 bg-[#111] border border-[#d4af37]/30 p-16 text-center shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-[#d4af37] to-transparent"></div>
-          <h3 className="text-3xl font-serif text-white mb-6 tracking-wide">Assine o Clube de Vantagens</h3>
-          <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-            Tenha acesso exclusivo a peças limitadas, curadoria personalizada e 
-            atendimento premium na nossa barbearia e alfaiataria.
+        {/* CTA Section (Black Contrast Block) */}
+        <div className="mt-24 bg-black border-t-4 border-[#0033a0] p-16 text-center shadow-2xl relative overflow-hidden">
+          <h3 className="text-3xl font-serif text-white mb-6 tracking-wide">Eleve Seu Estilo</h3>
+          <p className="text-gray-300 text-lg mb-10 max-w-2xl mx-auto font-light leading-relaxed">
+            Gostou das dicas? Agende seu horário na Barbearia do Brunno e tenha a experiência completa 
+            com os melhores profissionais.
           </p>
-          <button className="bg-[#d4af37] text-black px-10 py-4 text-sm font-bold uppercase tracking-[0.2em] hover:bg-[#c5a059] transition-colors">
-            Descobrir Benefícios
+          <button className="bg-white text-black px-10 py-4 text-sm font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors">
+            Agendar Horário
           </button>
         </div>
       </main>
       
-      <footer className="bg-black border-t border-[#222] text-gray-500 py-16 text-center text-sm tracking-widest uppercase mt-20">
-        <div className="w-8 h-8 mx-auto mb-6 flex items-center justify-center bg-[#d4af37]/10 text-[#d4af37] font-serif font-bold text-xl">V</div>
-        <p>© 2026 Vero Eleganza. Todos os direitos reservados.</p>
+      <footer className="bg-gray-900 border-t border-black text-gray-400 py-12 text-center text-sm tracking-widest uppercase mt-20">
+        <p className="font-serif italic mb-2 text-lg">Barbearia do Brunno</p>
+        <p>© 2026 Todos os direitos reservados.</p>
       </footer>
     </div>
   );
