@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Send, CheckCircle2, AlertCircle, Link as LinkIcon, RefreshCcw, LayoutGrid } from "lucide-react";
+import { Send, CheckCircle2, AlertCircle, Link as LinkIcon, RefreshCcw, LayoutGrid, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { collection, addDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
+import { collection, addDoc, onSnapshot, query, where, deleteDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 
 const PILARES = [
@@ -36,12 +36,15 @@ export function AdminCuration() {
   useEffect(() => {
     const q = query(
       collection(db, "curation_queue"),
-      where("status", "==", "pending"),
-      orderBy("createdAt", "desc")
+      where("status", "==", "pending")
     );
     const unsub = onSnapshot(q, (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as QueueItem));
+      // Ordenar no cliente para não exigir Índice Composto no Firebase
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
       setQueue(list);
+    }, (error) => {
+      console.error("Erro ao buscar fila:", error);
     });
     return unsub;
   }, []);
@@ -71,6 +74,14 @@ export function AdminCuration() {
     } catch (error) {
       console.error(error);
       setStatus("error");
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDoc(doc(db, "curation_queue", id));
+    } catch (error) {
+      console.error("Erro ao excluir link:", error);
     }
   };
 
@@ -186,8 +197,15 @@ export function AdminCuration() {
                       let domain = item.url;
                       try { domain = new URL(item.url).hostname; } catch(e) {}
                       return (
-                        <li key={item.id} className="text-xs text-gray-400 bg-black p-2 rounded border border-[#111] truncate" title={item.url}>
-                          {domain}
+                        <li key={item.id} className="text-xs text-gray-400 bg-black p-2 rounded border border-[#111] truncate flex justify-between items-center group" title={item.url}>
+                          <span>{domain}</span>
+                          <button 
+                            onClick={() => handleDelete(item.id)}
+                            className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400"
+                            title="Excluir"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </button>
                         </li>
                       );
                     })}
