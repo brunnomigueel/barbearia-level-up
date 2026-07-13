@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Barbearia do Brunno - Estilo e Cuidado Masculino" },
+      { title: "Blog do Homem - Estilo e Cuidado Masculino" },
       { name: "description", content: "Dicas de saúde, bem-estar e estilo para o homem moderno." },
     ],
   }),
@@ -43,7 +43,7 @@ function BlogHome() {
       <header className="bg-black text-white py-5 px-6 shadow-md sticky top-0 z-50 border-b border-[#222]">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-serif tracking-wide uppercase">Barbearia do Brunno</h1>
+            <h1 className="text-2xl font-serif tracking-wide uppercase">Blog do Homem</h1>
           </div>
           <nav className="hidden md:flex space-x-8 text-sm font-medium uppercase tracking-wider text-gray-400">
             <Link href="/" className="hover:text-white transition-colors">Lifestyle</Link>
@@ -123,7 +123,7 @@ function BlogHome() {
       </main>
 
       <footer className="bg-black border-t border-[#222] text-gray-500 py-16 text-center text-sm tracking-widest uppercase">
-        <p className="font-serif italic mb-2 text-lg text-white">Barbearia do Brunno</p>
+        <p className="font-serif italic mb-2 text-lg text-white">Blog do Homem</p>
         <p>© 2026 Todos os direitos reservados.</p>
       </footer>
     </div>

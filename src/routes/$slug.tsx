@@ -33,7 +33,7 @@ export const Route = createFileRoute("/$slug")({
     if (!loaderData) return {};
     return {
       meta: [
-        { title: `${loaderData.title} | Barbearia do Brunno` },
+        { title: `${loaderData.title} | Blog do Homem` },
         { name: "description", content: loaderData.excerpt },
         { property: "og:title", content: loaderData.title },
         { property: "og:description", content: loaderData.excerpt },
@@ -61,7 +61,7 @@ function ArticlePage() {
       <header className="bg-black text-white py-5 px-6 shadow-md sticky top-0 z-50 border-b border-[#222]">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <Link to="/" className="text-2xl font-serif tracking-wide uppercase hover:text-gray-300 transition-colors">
-            Barbearia do Brunno
+            Blog do Homem
           </Link>
         </div>
       </header>
@@ -124,7 +124,7 @@ function ArticlePage() {
       </main>
       
       <footer className="bg-black border-t border-[#222] text-gray-500 py-16 text-center text-sm tracking-widest uppercase mt-20">
-        <p className="font-serif italic mb-2 text-lg text-white">Barbearia do Brunno</p>
+        <p className="font-serif italic mb-2 text-lg text-white">Blog do Homem</p>
         <p>© 2026 Todos os direitos reservados.</p>
       </footer>
     </div>
