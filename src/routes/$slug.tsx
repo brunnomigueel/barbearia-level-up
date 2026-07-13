@@ -33,7 +33,7 @@ export const Route = createFileRoute("/$slug")({
     if (!loaderData) return {};
     return {
       meta: [
-        { title: `${loaderData.title} | Blog do Homem` },
+        { title: `${loaderData.title} | RESET` },
         { name: "description", content: loaderData.excerpt },
         { property: "og:title", content: loaderData.title },
         { property: "og:description", content: loaderData.excerpt },
@@ -60,8 +60,9 @@ function ArticlePage() {
       {/* Top Bar */}
       <header className="bg-black text-white py-5 px-6 shadow-md sticky top-0 z-50 border-b border-[#222]">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <Link to="/" className="text-2xl font-serif tracking-wide uppercase hover:text-gray-300 transition-colors">
-            Blog do Homem
+          <Link to="/" className="flex flex-col gap-1 hover:opacity-80 transition-opacity">
+            <span className="text-2xl font-serif tracking-widest uppercase font-bold text-white">RESET</span>
+            <span className="text-[10px] uppercase tracking-widest text-gray-500">O Blog do Homem Sábio</span>
           </Link>
         </div>
       </header>
@@ -114,8 +115,8 @@ function ArticlePage() {
         <div className="mt-24 bg-[#111] border border-[#333] p-16 text-center shadow-2xl relative overflow-hidden">
           <h3 className="text-3xl font-serif text-white mb-6 tracking-wide uppercase">Eleve Seu Estilo</h3>
           <p className="text-gray-400 text-lg mb-10 max-w-2xl mx-auto font-light leading-relaxed">
-            Gostou das dicas? Agende seu horário na Barbearia do Brunno e tenha a experiência completa 
-            com os melhores profissionais.
+            Gostou das reflexões? Agende seu horário na Barbearia do Brunno e tenha a experiência completa 
+            com profissionais que entendem a essência masculina.
           </p>
           <button className="bg-white text-black px-12 py-4 text-sm font-bold uppercase tracking-widest hover:bg-gray-200 transition-colors">
             Agendar Horário
@@ -123,8 +124,9 @@ function ArticlePage() {
         </div>
       </main>
       
-      <footer className="bg-black border-t border-[#222] text-gray-500 py-16 text-center text-sm tracking-widest uppercase mt-20">
-        <p className="font-serif italic mb-2 text-lg text-white">Blog do Homem</p>
+      <footer className="bg-black border-t border-[#222] text-gray-500 py-16 text-center text-sm tracking-widest uppercase mt-20 flex flex-col items-center">
+        <h2 className="font-serif text-2xl font-bold tracking-widest text-white mb-1">RESET</h2>
+        <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-8">O Blog do Homem Sábio</p>
         <p>© 2026 Todos os direitos reservados.</p>
       </footer>
     </div>

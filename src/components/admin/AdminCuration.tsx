@@ -1,47 +1,65 @@
-import { useState } from "react";
-import { Send, CheckCircle2, AlertCircle, Link as LinkIcon, RefreshCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Send, CheckCircle2, AlertCircle, Link as LinkIcon, RefreshCcw, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { createServerFn } from "@tanstack/react-start";
+import { collection, addDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
-const sendToN8nFn = createServerFn({ method: "POST" })
-  .validator((data: { url: string; note: string }) => data)
-  .handler(async ({ data }) => {
-    const webhookUrl = "https://n8n.brunnos.com.br/webhook/curation";
-    
-    const res = await fetch(webhookUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url: data.url,
-        note: data.note,
-        timestamp: new Date().toISOString()
-      }),
-    });
+const PILARES = [
+  "Física",
+  "Profissional",
+  "Financeira",
+  "Intelectual",
+  "Social",
+  "Espiritual",
+  "Familiar",
+  "Mental"
+];
 
-    if (!res.ok) {
-      throw new Error(`Falha no Webhook: ${res.statusText}`);
-    }
-
-    return { success: true };
-  });
+interface QueueItem {
+  id: string;
+  url: string;
+  note: string;
+  category: string;
+  status: "pending" | "processed";
+  createdAt: string;
+}
 
 export function AdminCuration() {
   const [url, setUrl] = useState("");
   const [note, setNote] = useState("");
+  const [category, setCategory] = useState(PILARES[0]);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [queue, setQueue] = useState<QueueItem[]>([]);
+
+  useEffect(() => {
+    const q = query(
+      collection(db, "curation_queue"),
+      where("status", "==", "pending"),
+      orderBy("createdAt", "desc")
+    );
+    const unsub = onSnapshot(q, (snap) => {
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as QueueItem));
+      setQueue(list);
+    });
+    return unsub;
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url) return;
+    if (!url || !category) return;
 
     setStatus("sending");
     
     try {
-      await sendToN8nFn({ data: { url, note } });
+      await addDoc(collection(db, "curation_queue"), {
+        url,
+        note,
+        category,
+        status: "pending",
+        createdAt: new Date().toISOString()
+      });
       
       setStatus("success");
       setUrl("");
@@ -56,31 +74,53 @@ export function AdminCuration() {
     }
   };
 
+  const groupedQueue = PILARES.reduce((acc, pilar) => {
+    acc[pilar] = queue.filter(q => q.category === pilar);
+    return acc;
+  }, {} as Record<string, QueueItem[]>);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Hub de Curação (Alimentação n8n)</h2>
-        <p className="text-muted-foreground mt-2">
-          Envie URLs de artigos e sites de saúde/bem-estar masculino. O n8n irá ler a matéria, 
-          reescrever com foco no público masculino e publicar automaticamente no Blog da barbearia.
+        <h2 className="text-3xl font-serif font-bold tracking-tight text-white mb-2">Estoque de Curação</h2>
+        <p className="text-gray-400">
+          Adicione links de referência. O n8n irá consumir um link por dia, rotacionando entre os 8 Pilares da Saúde.
         </p>
       </div>
 
-      <div className="bg-[#121212] border border-[#222] p-6 rounded-lg max-w-2xl shadow-xl shadow-black/50">
+      <div className="bg-[#121212] border border-[#222] p-8 rounded-lg max-w-3xl shadow-2xl">
         <form onSubmit={handleSubmit} className="space-y-6">
           
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
-              <LinkIcon className="h-4 w-4 text-[#00ff00]" />
-              URL do Artigo Fonte
-            </label>
-            <Input
-              placeholder="https://exemplo.com/materia"
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              required
-              className="bg-black border-[#333] text-white focus-visible:ring-[#00ff00]"
-            />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                <LinkIcon className="h-4 w-4 text-[#00ff00]" />
+                URL do Artigo Fonte
+              </label>
+              <Input
+                placeholder="https://exemplo.com/materia"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+                className="bg-black border-[#333] text-white focus-visible:ring-[#00ff00]"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-300 flex items-center gap-2">
+                <LayoutGrid className="h-4 w-4 text-[#00ff00]" />
+                Pilar da Saúde
+              </label>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-[#333] bg-black px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-[#00ff00] focus:border-transparent"
+              >
+                {PILARES.map(p => (
+                  <option key={p} value={p}>{p}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -91,7 +131,7 @@ export function AdminCuration() {
               placeholder="Ex: Focar mais na parte de cuidados com a barba e citar nossos produtos..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              className="bg-black border-[#333] text-white focus-visible:ring-[#00ff00] min-h-[100px]"
+              className="bg-black border-[#333] text-white focus-visible:ring-[#00ff00] min-h-[80px]"
             />
           </div>
 
@@ -103,32 +143,60 @@ export function AdminCuration() {
             {status === "sending" ? (
               <>
                 <RefreshCcw className="mr-2 h-5 w-5 animate-spin" />
-                Enviando para o n8n...
+                Salvando na Fila...
               </>
             ) : status === "success" ? (
               <>
                 <CheckCircle2 className="mr-2 h-5 w-5" />
-                Enviado com Sucesso!
+                Adicionado ao Estoque!
               </>
             ) : status === "error" ? (
               <>
                 <AlertCircle className="mr-2 h-5 w-5" />
-                Erro no Envio
+                Erro ao Salvar
               </>
             ) : (
               <>
                 <Send className="mr-2 h-5 w-5" />
-                Processar Artigo
+                Adicionar à Fila de Publicação
               </>
             )}
           </Button>
-
-          {status === "error" && (
-            <p className="text-red-400 text-sm text-center">
-              Não foi possível conectar ao n8n. Verifique se o Webhook está ativo na URL: https://n8n.brunnos.com.br/webhook/curation
-            </p>
-          )}
         </form>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-serif font-bold text-white mb-6 border-b border-[#222] pb-4">Fila Pendente por Pilar</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PILARES.map(pilar => {
+            const items = groupedQueue[pilar] || [];
+            return (
+              <div key={pilar} className="bg-[#0a0a0a] border border-[#222] p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-bold text-gray-300">{pilar}</h4>
+                  <span className="bg-[#222] text-[#00ff00] text-xs px-2 py-1 rounded-full font-bold">
+                    {items.length}
+                  </span>
+                </div>
+                {items.length === 0 ? (
+                  <p className="text-gray-600 text-sm italic">Nenhum link na fila.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {items.map(item => {
+                      let domain = item.url;
+                      try { domain = new URL(item.url).hostname; } catch(e) {}
+                      return (
+                        <li key={item.id} className="text-xs text-gray-400 bg-black p-2 rounded border border-[#111] truncate" title={item.url}>
+                          {domain}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

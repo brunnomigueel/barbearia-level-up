@@ -6,8 +6,8 @@ import { db } from "@/lib/firebase";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Blog do Homem - Estilo e Cuidado Masculino" },
-      { name: "description", content: "Dicas de saúde, bem-estar e estilo para o homem moderno." },
+      { title: "RESET - O Blog do Homem Sábio" },
+      { name: "description", content: "O guia definitivo para a evolução do homem através dos 8 Pilares da Saúde." },
     ],
   }),
   component: BlogHome,
@@ -20,6 +20,7 @@ interface Article {
   excerpt: string;
   imageUrl: string;
   content: string;
+  category?: string;
   createdAt: string;
 }
 
@@ -41,14 +42,20 @@ function BlogHome() {
     <div className="min-h-screen bg-gray-50 font-sans text-gray-900">
       {/* Top Bar - Sophisticated Black */}
       <header className="bg-black text-white py-5 px-6 shadow-md sticky top-0 z-50 border-b border-[#222]">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-serif tracking-wide uppercase">Blog do Homem</h1>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+          <div className="flex flex-col items-center md:items-start gap-1">
+            <h1 className="text-3xl font-serif tracking-widest uppercase font-bold text-white">RESET</h1>
+            <span className="text-[10px] uppercase tracking-widest text-gray-500">O Blog do Homem Sábio</span>
           </div>
-          <nav className="hidden md:flex space-x-8 text-sm font-medium uppercase tracking-wider text-gray-400">
-            <Link href="/" className="hover:text-white transition-colors">Lifestyle</Link>
-            <Link href="/" className="hover:text-white transition-colors">Saúde</Link>
-            <Link href="/" className="hover:text-white transition-colors">Estilo</Link>
+          <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-medium uppercase tracking-widest text-gray-400">
+            <Link href="/" className="hover:text-white transition-colors">Física</Link>
+            <Link href="/" className="hover:text-white transition-colors">Profissional</Link>
+            <Link href="/" className="hover:text-white transition-colors">Financeira</Link>
+            <Link href="/" className="hover:text-white transition-colors">Intelectual</Link>
+            <Link href="/" className="hover:text-white transition-colors">Social</Link>
+            <Link href="/" className="hover:text-white transition-colors">Espiritual</Link>
+            <Link href="/" className="hover:text-white transition-colors">Familiar</Link>
+            <Link href="/" className="hover:text-white transition-colors">Mental</Link>
           </nav>
         </div>
       </header>
@@ -64,11 +71,11 @@ function BlogHome() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black"></div>
         </div>
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <h2 className="text-5xl md:text-7xl font-serif text-white mb-6 leading-tight uppercase tracking-widest">
-            Blog Para O Homem
+          <h2 className="text-6xl md:text-8xl font-serif text-white mb-4 leading-tight uppercase tracking-widest font-bold">
+            RESET
           </h2>
           <p className="text-xl md:text-2xl font-light text-gray-300 mb-10 max-w-2xl mx-auto leading-relaxed font-serif italic">
-            O guia definitivo de bem-estar, saúde e estilo para o homem contemporâneo.
+            A jornada completa para a evolução masculina através dos 8 Pilares da Saúde.
           </p>
           <button className="bg-white text-black px-12 py-4 text-sm font-bold uppercase tracking-widest hover:bg-gray-200 transition-all">
             Descubra Mais
@@ -105,6 +112,11 @@ function BlogHome() {
                 </div>
                 <div className="p-8 flex-1 flex flex-col justify-between">
                   <div>
+                    {article.category && (
+                      <span className="inline-block px-3 py-1 bg-[#222] text-gray-300 text-[10px] uppercase tracking-widest mb-4 border border-[#333]">
+                        Saúde {article.category}
+                      </span>
+                    )}
                     <h4 className="text-2xl font-serif text-white mb-4 leading-snug group-hover:text-gray-300 transition-colors">
                       {article.title}
                     </h4>
@@ -122,8 +134,9 @@ function BlogHome() {
         )}
       </main>
 
-      <footer className="bg-black border-t border-[#222] text-gray-500 py-16 text-center text-sm tracking-widest uppercase">
-        <p className="font-serif italic mb-2 text-lg text-white">Blog do Homem</p>
+      <footer className="bg-black border-t border-[#222] text-gray-500 py-16 text-center text-sm tracking-widest uppercase flex flex-col items-center">
+        <h2 className="font-serif text-2xl font-bold tracking-widest text-white mb-1">RESET</h2>
+        <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-8">O Blog do Homem Sábio</p>
         <p>© 2026 Todos os direitos reservados.</p>
       </footer>
     </div>
