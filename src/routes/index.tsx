@@ -64,9 +64,9 @@ function BlogHome() {
       <section className="relative h-[70vh] bg-black flex flex-col items-center justify-center overflow-hidden">
         <div className="absolute inset-0">
           <img 
-            src="https://images.unsplash.com/photo-1617137968427-85924c800a22?q=80&w=2000&auto=format&fit=crop" 
-            alt="Homem Elegante" 
-            className="w-full h-full object-cover opacity-50 mix-blend-luminosity"
+            src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=2000&auto=format&fit=crop" 
+            alt="Homem Sábio e Contemplativo" 
+            className="w-full h-full object-cover opacity-40 mix-blend-luminosity"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black"></div>
         </div>
