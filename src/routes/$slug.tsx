@@ -3,6 +3,7 @@ import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { ArrowLeft, Clock } from "lucide-react";
 import { useEffect, useState } from "react";
+import { AIImage } from "@/components/AIImage";
 
 const AUTHORS: Record<string, string> = {
   "Física": "Dr. Henrique Ávila",
@@ -139,15 +140,9 @@ function ArticlePage() {
 
           {finalImageUrl && (
             <div className="relative mb-16 shadow-xl border border-[#222]">
-              <img 
+              <AIImage 
                 src={finalImageUrl} 
                 alt={article.title} 
-                onError={(e) => {
-                  const fallback = `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", masculine aesthetic, highly detailed")}?width=1200&height=800&nologo=true`;
-                  if (e.currentTarget.src !== fallback) {
-                    e.currentTarget.src = fallback;
-                  }
-                }}
                 className="w-full h-[500px] object-cover mix-blend-luminosity opacity-80"
               />
             </div>
@@ -182,14 +177,8 @@ function ArticlePage() {
               {related.map(rel => (
                 <Link to={`/${rel.slug}`} key={rel.id} className="group bg-[#111] border border-[#222] hover:border-[#C6A87C]/50 transition-all p-4 flex flex-col">
                   <div className="relative h-40 mb-4 overflow-hidden bg-black">
-                    <img 
+                    <AIImage 
                       src={rel.imageUrl?.startsWith("http") && !rel.imageUrl.includes("unsplash.com") ? rel.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", masculine aesthetic, highly detailed")}?width=600&height=400&nologo=true`} 
-                      onError={(e) => {
-                        const fallback = `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", masculine aesthetic")}?width=600&height=400&nologo=true`;
-                        if (e.currentTarget.src !== fallback) {
-                          e.currentTarget.src = fallback;
-                        }
-                      }}
                       className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" 
                       alt={rel.title} 
                     />

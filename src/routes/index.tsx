@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { AIImage } from "@/components/AIImage";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -126,15 +127,9 @@ function BlogHome() {
                 className="group flex flex-col bg-[#111] border border-[#222] hover:border-[#C6A87C]/50 transition-all cursor-pointer"
               >
                 <div className="relative h-[400px] overflow-hidden bg-black">
-                  <img 
+                  <AIImage 
                     src={article.imageUrl?.startsWith("http") && !article.imageUrl.includes("unsplash.com") ? article.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", masculine aesthetic, men, luxury, success, gym, health, highly detailed realistic professional photography")}?width=800&height=400&nologo=true`} 
                     alt={article.title}
-                    onError={(e) => {
-                      const fallback = `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", masculine aesthetic, highly detailed")}?width=800&height=400&nologo=true`;
-                      if (e.currentTarget.src !== fallback) {
-                        e.currentTarget.src = fallback;
-                      }
-                    }}
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80 mix-blend-luminosity group-hover:mix-blend-normal"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent" />
