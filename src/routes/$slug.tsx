@@ -88,7 +88,11 @@ function ArticlePage() {
   const authorName = article.category ? (AUTHORS[article.category] || "Redação RESET") : "Redação RESET";
   const finalImageUrl = article.imageUrl?.startsWith("http") 
     ? article.imageUrl 
-    : `https://source.unsplash.com/1200x800/?${article.imageUrl || article.category || 'man'}`;
+    : `https://image.pollinations.ai/prompt/${encodeURIComponent((article.imageUrl || article.category || article.title) + ", realistic photography, professional, ultra detailed")}?width=1200&height=800&nologo=true`;
+
+  const safeDate = article.createdAt && !isNaN(new Date(article.createdAt).getTime()) 
+    ? new Date(article.createdAt) 
+    : new Date();
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] font-sans text-gray-200">
@@ -120,9 +124,9 @@ function ArticlePage() {
             <div className="flex items-center justify-center gap-4 text-gray-500 uppercase tracking-widest text-xs font-semibold">
               <span className="text-[#C6A87C]">{authorName}</span>
               <span>•</span>
-              <time dateTime={article.createdAt} className="flex items-center gap-1">
+              <time dateTime={safeDate.toISOString()} className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {new Date(article.createdAt).toLocaleString("pt-BR", {
+                {safeDate.toLocaleString("pt-BR", {
                   day: "2-digit",
                   month: "long",
                   year: "numeric",
@@ -138,6 +142,9 @@ function ArticlePage() {
               <img 
                 src={finalImageUrl} 
                 alt={article.title} 
+                onError={(e) => {
+                  e.currentTarget.src = `https://image.pollinations.ai/prompt/${encodeURIComponent((article.category || article.title) + ", realistic photography, professional, ultra detailed")}?width=1200&height=800&nologo=true`;
+                }}
                 className="w-full h-[500px] object-cover mix-blend-luminosity opacity-80"
               />
             </div>
@@ -173,7 +180,10 @@ function ArticlePage() {
                 <Link to={`/${rel.slug}`} key={rel.id} className="group bg-[#111] border border-[#222] hover:border-[#C6A87C]/50 transition-all p-4 flex flex-col">
                   <div className="relative h-40 mb-4 overflow-hidden bg-black">
                     <img 
-                      src={rel.imageUrl?.startsWith("http") ? rel.imageUrl : `https://source.unsplash.com/600x400/?${rel.imageUrl || rel.category || 'man'}`} 
+                      src={rel.imageUrl?.startsWith("http") ? rel.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent((rel.imageUrl || rel.category || rel.title) + ", realistic photography")}?width=600&height=400&nologo=true`} 
+                      onError={(e) => {
+                        e.currentTarget.src = `https://image.pollinations.ai/prompt/${encodeURIComponent((rel.category || rel.title) + ", realistic photography")}?width=600&height=400&nologo=true`;
+                      }}
                       className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" 
                       alt={rel.title} 
                     />

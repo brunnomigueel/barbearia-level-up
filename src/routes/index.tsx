@@ -58,15 +58,20 @@ function BlogHome() {
             <span className="text-[10px] uppercase tracking-widest text-gray-500">O Blog do Homem Sábio</span>
           </Link>
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-medium uppercase tracking-widest text-gray-400">
-            {categories.map((cat) => (
-              <button 
-                key={cat}
-                onClick={() => setActiveCategory(cat)}
-                className={`transition-colors hover:text-[#C6A87C] ${activeCategory === cat ? 'text-[#C6A87C] font-bold' : ''}`}
-              >
-                {cat}
-              </button>
-            ))}
+            {categories.map((cat) => {
+              const latest = articles.find(a => a.category === cat);
+              return latest ? (
+                <Link 
+                  key={cat}
+                  to={`/${latest.slug}`}
+                  className="transition-colors hover:text-[#C6A87C]"
+                >
+                  {cat}
+                </Link>
+              ) : (
+                <span key={cat} className="text-gray-600 cursor-not-allowed" title="Nenhum artigo ainda">{cat}</span>
+              );
+            })}
           </nav>
         </div>
       </header>
@@ -122,8 +127,11 @@ function BlogHome() {
               >
                 <div className="relative h-[400px] overflow-hidden bg-black">
                   <img 
-                    src={article.imageUrl || "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=800&auto=format&fit=crop"} 
+                    src={article.imageUrl?.startsWith("http") ? article.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent((article.imageUrl || article.category || article.title) + ", realistic photography, professional")}?width=800&height=400&nologo=true`} 
                     alt={article.title}
+                    onError={(e) => {
+                      e.currentTarget.src = `https://image.pollinations.ai/prompt/${encodeURIComponent((article.category || article.title) + ", realistic photography, professional")}?width=800&height=400&nologo=true`;
+                    }}
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80 mix-blend-luminosity group-hover:mix-blend-normal"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#111] via-transparent to-transparent" />
