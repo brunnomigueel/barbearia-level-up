@@ -24,8 +24,7 @@ export function Login() {
           <div className="mb-3 grid h-14 w-14 place-items-center rounded-full bg-primary/15 text-primary">
             <Scissors className="h-7 w-7" />
           </div>
-          <h1 className="text-xl font-bold text-foreground">Barbearia do Brunno</h1>
-          <p className="text-sm text-muted-foreground">Gamificação · Plano de Carreira</p>
+          <h1 className="text-xl font-bold text-foreground">Brunnos</h1>
         </div>
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
@@ -39,9 +38,6 @@ export function Login() {
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full">Entrar</Button>
-          <p className="text-center text-xs text-muted-foreground">
-            Teste: 111, 222, 333, 444, 555 ou 00000000000 (admin)
-          </p>
         </form>
       </Card>
     </div>

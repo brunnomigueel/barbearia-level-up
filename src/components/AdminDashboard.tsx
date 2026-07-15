@@ -27,11 +27,7 @@ type View = "overview" | "approvals" | "team" | "missions" | "career" | "curatio
 
 const NAV: { id: View; label: string; icon: typeof BarChart3 }[] = [
   { id: "overview", label: "Visão Geral", icon: BarChart3 },
-  { id: "curation", label: "Hub de Curação", icon: ShieldCheck }, // Usando um icone existente temporariamente
-  { id: "approvals", label: "Aprovações", icon: CheckSquare },
-  { id: "team", label: "Gestão da Equipe", icon: Users },
-  { id: "career", label: "Plano de Carreira", icon: ShieldCheck },
-  { id: "missions", label: "Missões e Regras", icon: Settings },
+  { id: "curation", label: "Hub de Curação", icon: ShieldCheck },
 ];
 
 export function AdminDashboard() {

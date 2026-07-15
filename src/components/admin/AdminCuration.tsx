@@ -26,19 +26,27 @@ interface QueueItem {
   createdAt: string;
 }
 
+interface Article {
+  id: string;
+  title: string;
+  category: string;
+  createdAt: string;
+}
+
 export function AdminCuration() {
   const [url, setUrl] = useState("");
   const [note, setNote] = useState("");
   const [category, setCategory] = useState(PILARES[0]);
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [queue, setQueue] = useState<QueueItem[]>([]);
+  const [articles, setArticles] = useState<Article[]>([]);
 
   useEffect(() => {
     const q = query(
       collection(db, "curation_queue"),
       where("status", "==", "pending")
     );
-    const unsub = onSnapshot(q, (snap) => {
+    const unsubQueue = onSnapshot(q, (snap) => {
       const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as QueueItem));
       // Ordenar no cliente para não exigir Índice Composto no Firebase
       list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -46,7 +54,17 @@ export function AdminCuration() {
     }, (error) => {
       console.error("Erro ao buscar fila:", error);
     });
-    return unsub;
+
+    const unsubArticles = onSnapshot(collection(db, "articles"), (snap) => {
+      const list = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Article));
+      list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      setArticles(list);
+    });
+
+    return () => {
+      unsubQueue();
+      unsubArticles();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -85,10 +103,24 @@ export function AdminCuration() {
     }
   };
 
+  const handleDeleteArticle = async (id: string) => {
+    if (!confirm("Tem certeza que deseja apagar esta postagem definitivamente do blog?")) return;
+    try {
+      await deleteDoc(doc(db, "articles", id));
+    } catch (error) {
+      console.error("Erro ao excluir artigo:", error);
+    }
+  };
+
   const groupedQueue = PILARES.reduce((acc, pilar) => {
     acc[pilar] = queue.filter(q => q.category === pilar);
     return acc;
   }, {} as Record<string, QueueItem[]>);
+
+  const groupedArticles = PILARES.reduce((acc, pilar) => {
+    acc[pilar] = articles.filter(a => a.category === pilar);
+    return acc;
+  }, {} as Record<string, Article[]>);
 
   return (
     <div className="space-y-10">
@@ -177,15 +209,15 @@ export function AdminCuration() {
       </div>
 
       <div>
-        <h3 className="text-xl font-serif font-bold text-white mb-6 border-b border-[#222] pb-4">Fila Pendente por Pilar</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h3 className="text-xl font-serif font-bold text-white mb-6 border-b border-[#222] pb-4">1. Fila de Links Pendentes</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-16">
           {PILARES.map(pilar => {
             const items = groupedQueue[pilar] || [];
             return (
               <div key={pilar} className="bg-[#0a0a0a] border border-[#222] p-4 rounded-lg">
                 <div className="flex justify-between items-center mb-4">
                   <h4 className="font-bold text-gray-300">{pilar}</h4>
-                  <span className="bg-[#222] text-[#00ff00] text-xs px-2 py-1 rounded-full font-bold">
+                  <span className="bg-[#222] text-[#C6A87C] text-xs px-2 py-1 rounded-full font-bold">
                     {items.length}
                   </span>
                 </div>
@@ -193,22 +225,60 @@ export function AdminCuration() {
                   <p className="text-gray-600 text-sm italic">Nenhum link na fila.</p>
                 ) : (
                   <ul className="space-y-2">
-                    {items.map(item => {
+                    {items.map((item, index) => {
                       let domain = item.url;
                       try { domain = new URL(item.url).hostname; } catch(e) {}
                       return (
-                        <li key={item.id} className="text-xs text-gray-400 bg-black p-2 rounded border border-[#111] truncate flex justify-between items-center group" title={item.url}>
-                          <span>{domain}</span>
+                        <li key={item.id} className="text-xs text-gray-400 bg-black p-2 rounded border border-[#111] truncate flex justify-between items-center group relative" title={item.url}>
+                          <div className="flex items-center gap-2 truncate">
+                            <span className="text-[#333] font-bold">#{index + 1}</span>
+                            <span className="truncate">{domain}</span>
+                          </div>
                           <button 
                             onClick={() => handleDelete(item.id)}
-                            className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400"
-                            title="Excluir"
+                            className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400 ml-2"
+                            title="Excluir da fila"
                           >
                             <Trash2 className="h-3 w-3" />
                           </button>
                         </li>
                       );
                     })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <h3 className="text-xl font-serif font-bold text-white mb-6 border-b border-[#222] pb-4">2. Artigos Já Postados no Blog</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {PILARES.map(pilar => {
+            const items = groupedArticles[pilar] || [];
+            return (
+              <div key={pilar} className="bg-[#050505] border border-[#111] p-4 rounded-lg">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-bold text-gray-500">{pilar}</h4>
+                  <span className="bg-[#111] text-gray-400 text-xs px-2 py-1 rounded-full font-bold">
+                    {items.length}
+                  </span>
+                </div>
+                {items.length === 0 ? (
+                  <p className="text-gray-700 text-sm italic">Nenhum artigo postado.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {items.map((item) => (
+                      <li key={item.id} className="text-xs text-gray-300 bg-[#121212] p-2 rounded border border-[#222] flex justify-between items-center group relative">
+                        <span className="truncate pr-4" title={item.title}>{item.title}</span>
+                        <button 
+                          onClick={() => handleDeleteArticle(item.id)}
+                          className="text-red-500 opacity-0 group-hover:opacity-100 transition-opacity hover:text-red-400 shrink-0"
+                          title="Excluir postagem do blog"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </li>
+                    ))}
                   </ul>
                 )}
               </div>
