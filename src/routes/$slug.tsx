@@ -86,9 +86,9 @@ function ArticlePage() {
   }, [article.category, article.id]);
 
   const authorName = article.category ? (AUTHORS[article.category] || "Redação RESET") : "Redação RESET";
-  const finalImageUrl = article.imageUrl?.startsWith("http") 
+  const finalImageUrl = article.imageUrl?.startsWith("http") && !article.imageUrl.includes("unsplash.com")
     ? article.imageUrl 
-    : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", " + article.category + ", realistic professional photography, ultra detailed")}?width=1200&height=800&nologo=true`;
+    : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", masculine aesthetic, men, luxury, success, gym, health, highly detailed realistic professional photography")}?width=1200&height=800&nologo=true`;
 
   const safeDate = article.createdAt && !isNaN(new Date(article.createdAt).getTime()) 
     ? new Date(article.createdAt) 
@@ -143,7 +143,10 @@ function ArticlePage() {
                 src={finalImageUrl} 
                 alt={article.title} 
                 onError={(e) => {
-                  e.currentTarget.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", realistic professional photography")}?width=1200&height=800&nologo=true`;
+                  const fallback = `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", masculine aesthetic, highly detailed")}?width=1200&height=800&nologo=true`;
+                  if (e.currentTarget.src !== fallback) {
+                    e.currentTarget.src = fallback;
+                  }
                 }}
                 className="w-full h-[500px] object-cover mix-blend-luminosity opacity-80"
               />
@@ -180,9 +183,12 @@ function ArticlePage() {
                 <Link to={`/${rel.slug}`} key={rel.id} className="group bg-[#111] border border-[#222] hover:border-[#C6A87C]/50 transition-all p-4 flex flex-col">
                   <div className="relative h-40 mb-4 overflow-hidden bg-black">
                     <img 
-                      src={rel.imageUrl?.startsWith("http") ? rel.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", " + rel.category + ", realistic photography")}?width=600&height=400&nologo=true`} 
+                      src={rel.imageUrl?.startsWith("http") && !rel.imageUrl.includes("unsplash.com") ? rel.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", masculine aesthetic, highly detailed")}?width=600&height=400&nologo=true`} 
                       onError={(e) => {
-                        e.currentTarget.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", realistic photography")}?width=600&height=400&nologo=true`;
+                        const fallback = `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", masculine aesthetic")}?width=600&height=400&nologo=true`;
+                        if (e.currentTarget.src !== fallback) {
+                          e.currentTarget.src = fallback;
+                        }
                       }}
                       className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" 
                       alt={rel.title} 
