@@ -58,20 +58,20 @@ function BlogHome() {
             <span className="text-[10px] uppercase tracking-widest text-gray-500">O Blog do Homem Sábio</span>
           </Link>
           <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs font-medium uppercase tracking-widest text-gray-400">
-            {categories.map((cat) => {
-              const latest = articles.find(a => a.category === cat);
-              return latest ? (
-                <Link 
-                  key={cat}
-                  to={`/${latest.slug}`}
-                  className="transition-colors hover:text-[#C6A87C]"
-                >
-                  {cat}
-                </Link>
-              ) : (
-                <span key={cat} className="text-gray-600 cursor-not-allowed" title="Nenhum artigo ainda">{cat}</span>
-              );
-            })}
+            {categories.map((cat) => (
+              <button 
+                key={cat}
+                onClick={() => {
+                  setActiveCategory(cat);
+                  setTimeout(() => {
+                    document.getElementById('articles')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 100);
+                }}
+                className={`transition-colors hover:text-[#C6A87C] ${activeCategory === cat ? 'text-[#C6A87C] font-bold' : ''}`}
+              >
+                {cat}
+              </button>
+            ))}
           </nav>
         </div>
       </header>
@@ -127,10 +127,10 @@ function BlogHome() {
               >
                 <div className="relative h-[400px] overflow-hidden bg-black">
                   <img 
-                    src={article.imageUrl?.startsWith("http") ? article.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent((article.imageUrl || article.category || article.title) + ", realistic photography, professional")}?width=800&height=400&nologo=true`} 
+                    src={article.imageUrl?.startsWith("http") ? article.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", " + article.category + ", realistic professional photography, highly detailed")}?width=800&height=400&nologo=true`} 
                     alt={article.title}
                     onError={(e) => {
-                      e.currentTarget.src = `https://image.pollinations.ai/prompt/${encodeURIComponent((article.category || article.title) + ", realistic photography, professional")}?width=800&height=400&nologo=true`;
+                      e.currentTarget.src = `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", realistic professional photography")}?width=800&height=400&nologo=true`;
                     }}
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80 mix-blend-luminosity group-hover:mix-blend-normal"
                   />
