@@ -89,7 +89,7 @@ function ArticlePage() {
   const authorName = article.category ? (AUTHORS[article.category] || "Redação RESET") : "Redação RESET";
   const finalImageUrl = article.imageUrl?.startsWith("http") && !article.imageUrl.includes("unsplash.com")
     ? article.imageUrl 
-    : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", masculine aesthetic, men, luxury, success, gym, health, highly detailed realistic professional photography")}?width=1200&height=800&nologo=true`;
+    : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", " + (article.category || "lifestyle") + ", ultra realistic editorial photography, cinematic lighting, masculine lifestyle magazine, 8k resolution")}?width=1200&height=800&nologo=true`;
 
   const safeDate = article.createdAt && !isNaN(new Date(article.createdAt).getTime()) 
     ? new Date(article.createdAt) 
@@ -178,7 +178,7 @@ function ArticlePage() {
                 <Link to={`/${rel.slug}`} key={rel.id} className="group bg-[#111] border border-[#222] hover:border-[#C6A87C]/50 transition-all p-4 flex flex-col">
                   <div className="relative h-40 mb-4 overflow-hidden bg-black">
                     <AIImage 
-                      src={rel.imageUrl?.startsWith("http") && !rel.imageUrl.includes("unsplash.com") ? rel.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", masculine aesthetic, highly detailed")}?width=600&height=400&nologo=true`} 
+                      src={rel.imageUrl?.startsWith("http") && !rel.imageUrl.includes("unsplash.com") ? rel.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", " + (rel.category || "lifestyle") + ", ultra realistic editorial photography")}?width=600&height=400&nologo=true`} 
                       className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" 
                       alt={rel.title} 
                     />

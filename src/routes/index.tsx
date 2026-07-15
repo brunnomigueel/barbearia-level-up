@@ -128,7 +128,7 @@ function BlogHome() {
               >
                 <div className="relative h-[400px] overflow-hidden bg-black">
                   <AIImage 
-                    src={article.imageUrl?.startsWith("http") && !article.imageUrl.includes("unsplash.com") ? article.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", masculine aesthetic, men, luxury, success, gym, health, highly detailed realistic professional photography")}?width=800&height=400&nologo=true`} 
+                    src={article.imageUrl?.startsWith("http") && !article.imageUrl.includes("unsplash.com") ? article.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", " + (article.category || "lifestyle") + ", ultra realistic editorial photography, cinematic lighting, masculine lifestyle magazine, 8k resolution")}?width=800&height=400&nologo=true`} 
                     alt={article.title}
                     className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105 opacity-80 mix-blend-luminosity group-hover:mix-blend-normal"
                   />
