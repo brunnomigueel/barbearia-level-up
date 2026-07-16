@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { ArrowLeft, Clock, ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { AIImage } from "@/components/AIImage";
 
 const AUTHORS: Record<string, string> = {
@@ -112,6 +112,36 @@ function ArticlePage() {
     ? new Date(article.createdAt) 
     : new Date();
 
+  // Dynamic Table of Contents & Image Injection
+  const { modifiedContent, toc } = useMemo(() => {
+    const extractedToc: { id: string; title: string }[] = [];
+    let content = article.content || '';
+
+    // Regex para achar todas as tags <h2>...</h2> e injetar IDs e imagens
+    content = content.replace(/<h2[^>]*>(.*?)<\/h2>/gi, (match, innerHtml) => {
+      // Remove tags aninhadas (como <strong>) para pegar só o texto limpo
+      const plainText = innerHtml.replace(/<[^>]+>/g, '').trim();
+      const id = plainText.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+      
+      if (plainText) {
+        extractedToc.push({ id, title: plainText });
+      }
+
+      // Imagem gerada baseada no subtítulo específico
+      const prompt = `${plainText}, ${article.category || "lifestyle"}, ultra realistic editorial photography, magazine style`;
+      const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=800&height=400&nologo=true`;
+
+      return `
+        <h2 id="${id}" style="scroll-margin-top: 100px;">${innerHtml}</h2>
+        <div class="my-10 rounded-xl overflow-hidden shadow-2xl border border-[#222] bg-black">
+          <img src="${imageUrl}" alt="${plainText}" loading="lazy" class="w-full h-[250px] md:h-[400px] object-cover opacity-90 hover:opacity-100 transition-opacity duration-500" />
+        </div>
+      `;
+    });
+
+    return { modifiedContent: content, toc: extractedToc };
+  }, [article.content, article.category]);
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] font-sans text-gray-200">
       {/* Top Bar */}
@@ -164,6 +194,26 @@ function ArticlePage() {
             </div>
           )}
 
+          {/* Índice / Table of Contents Dinâmico */}
+          {toc.length > 0 && (
+            <div className="bg-[#111] border border-[#222] rounded-xl p-6 md:p-8 mb-16">
+              <h3 className="text-sm font-serif text-white mb-6 uppercase tracking-widest border-b border-[#333] pb-4 flex items-center justify-between">
+                <span>O que você encontrará neste artigo</span>
+                <span className="w-2 h-2 bg-[#C6A87C] rounded-full"></span>
+              </h3>
+              <ul className="space-y-4">
+                {toc.map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 group">
+                    <ChevronRight className="w-4 h-4 text-[#C6A87C] shrink-0 mt-1 opacity-50 group-hover:opacity-100 transition-opacity" />
+                    <a href={`#${item.id}`} className="text-gray-400 group-hover:text-[#C6A87C] transition-colors text-base font-medium">
+                      {item.title}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {/* Conteúdo do Artigo */}
           <div 
             className="prose prose-xl prose-invert max-w-none text-gray-300 leading-[2.1] font-light tracking-wide
@@ -176,7 +226,7 @@ function ArticlePage() {
                        prose-blockquote:border-l-4 prose-blockquote:border-[#C6A87C] prose-blockquote:bg-[#111]/50 prose-blockquote:p-8 prose-blockquote:text-gray-400 prose-blockquote:italic prose-blockquote:rounded-r-lg prose-blockquote:my-12
                        prose-img:rounded-xl prose-img:shadow-2xl prose-img:border border-[#222] prose-img:my-16
                        prose-strong:text-[#C6A87C] prose-strong:font-semibold"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{ __html: modifiedContent }}
           />
           
           {/* Author Box */}
