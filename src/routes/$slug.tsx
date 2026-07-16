@@ -175,18 +175,19 @@ function ArticlePage() {
                        prose-a:text-[#C6A87C] prose-a:font-medium hover:prose-a:text-white prose-a:underline-offset-4
                        prose-blockquote:border-l-4 prose-blockquote:border-[#C6A87C] prose-blockquote:bg-[#111]/50 prose-blockquote:p-8 prose-blockquote:text-gray-400 prose-blockquote:italic prose-blockquote:rounded-r-lg prose-blockquote:my-12
                        prose-img:rounded-xl prose-img:shadow-2xl prose-img:border border-[#222] prose-img:my-16
-                       prose-strong:text-white prose-strong:font-medium"
+                       prose-strong:text-[#C6A87C] prose-strong:font-semibold"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
           
           {/* Author Box */}
-          <div className="mt-20 pt-10 border-t border-[#222] flex flex-col md:flex-row items-center md:items-start gap-6 bg-[#111] p-8 rounded-xl">
-            <div className="w-20 h-20 shrink-0 rounded-full bg-black border border-[#333] flex items-center justify-center">
-              <span className="text-3xl font-serif text-[#C6A87C]">{authorName.charAt(0)}</span>
+          <div className="mt-16 flex flex-col md:flex-row items-center md:items-start gap-5 border border-[#C6A87C]/30 bg-[#C6A87C]/5 p-6 rounded-lg">
+            <div className="w-14 h-14 shrink-0 rounded-full bg-[#C6A87C] flex items-center justify-center shadow-lg shadow-[#C6A87C]/20">
+              <span className="text-2xl font-serif text-black font-bold">{authorName.charAt(0)}</span>
             </div>
-            <div className="text-center md:text-left">
-              <h4 className="text-xl font-serif text-white mb-2">{authorName}</h4>
-              <p className="text-gray-400 leading-relaxed">Redator especialista em {article.category} no RESET. Focado em trazer análises profundas e guias definitivos para o homem moderno que busca excelência e alta performance em todas as áreas da vida.</p>
+            <div className="text-center md:text-left flex-1">
+              <span className="text-[10px] uppercase tracking-widest text-[#C6A87C] font-semibold mb-1 block">Escrito por</span>
+              <h4 className="text-lg font-serif text-white mb-1">{authorName}</h4>
+              <p className="text-sm text-gray-400 leading-relaxed">Especialista responsável pelas publicações de {article.category} no RESET. Focado em trazer análises profundas e guias para o homem moderno.</p>
             </div>
           </div>
 
