@@ -166,14 +166,15 @@ function ArticlePage() {
 
           {/* Conteúdo do Artigo */}
           <div 
-            className="prose prose-xl prose-invert max-w-none text-gray-300 leading-relaxed font-light
-                       prose-headings:font-serif prose-headings:text-white prose-headings:font-normal
-                       prose-h2:text-3xl prose-h2:md:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:pb-4 prose-h2:border-b prose-h2:border-[#222]
+            className="prose prose-xl prose-invert max-w-none text-gray-300 leading-[2.1] font-light tracking-wide
+                       prose-headings:font-serif prose-headings:text-white prose-headings:font-normal prose-headings:mt-16 prose-headings:mb-10
+                       prose-h2:text-3xl prose-h2:md:text-4xl prose-h2:pb-6 prose-h2:border-b prose-h2:border-[#222]
                        prose-h3:text-2xl prose-h3:text-[#C6A87C]
-                       prose-p:mb-8 prose-p:tracking-wide
+                       prose-p:mb-10 prose-p:text-[1.15rem]
+                       prose-ul:my-10 prose-ul:space-y-4 prose-li:text-[1.15rem] prose-li:pl-2
                        prose-a:text-[#C6A87C] prose-a:font-medium hover:prose-a:text-white prose-a:underline-offset-4
-                       prose-blockquote:border-l-4 prose-blockquote:border-[#C6A87C] prose-blockquote:bg-[#111] prose-blockquote:p-6 prose-blockquote:text-gray-400 prose-blockquote:italic prose-blockquote:rounded-r-lg
-                       prose-img:rounded-xl prose-img:shadow-2xl prose-img:border border-[#222] prose-img:my-12
+                       prose-blockquote:border-l-4 prose-blockquote:border-[#C6A87C] prose-blockquote:bg-[#111]/50 prose-blockquote:p-8 prose-blockquote:text-gray-400 prose-blockquote:italic prose-blockquote:rounded-r-lg prose-blockquote:my-12
+                       prose-img:rounded-xl prose-img:shadow-2xl prose-img:border border-[#222] prose-img:my-16
                        prose-strong:text-white prose-strong:font-medium"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
