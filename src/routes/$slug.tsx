@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, orderBy, limit } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { ArrowLeft, Clock } from "lucide-react";
+import { ArrowLeft, Clock, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { AIImage } from "@/components/AIImage";
 
@@ -24,6 +24,7 @@ interface Article {
   content: string;
   imageUrl: string;
   createdAt: string;
+  category?: string;
 }
 
 export const Route = createFileRoute("/$slug")({
@@ -68,6 +69,7 @@ export const Route = createFileRoute("/$slug")({
 function ArticlePage() {
   const article = Route.useLoaderData();
   const [related, setRelated] = useState<Article[]>([]);
+  const [latest, setLatest] = useState<Article[]>([]);
 
   useEffect(() => {
     // Fetch related articles (same category, excluding current)
@@ -84,9 +86,24 @@ function ArticlePage() {
         setRelated(list);
       });
     }
+
+    // Fetch latest articles for the sidebar
+    const qLatest = query(
+      collection(db, "articles"),
+      orderBy("createdAt", "desc"),
+      limit(6)
+    );
+    getDocs(qLatest).then((snap) => {
+      const list = snap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Article))
+        .filter(a => a.id !== article.id)
+        .slice(0, 5);
+      setLatest(list);
+    });
   }, [article.category, article.id]);
 
   const authorName = article.category ? (AUTHORS[article.category] || "Redação RESET") : "Redação RESET";
+  
   const finalImageUrl = article.imageUrl?.startsWith("http") && !article.imageUrl.includes("unsplash.com")
     ? article.imageUrl 
     : `https://image.pollinations.ai/prompt/${encodeURIComponent(article.title + ", " + (article.category || "lifestyle") + ", ultra realistic editorial photography, cinematic lighting, masculine lifestyle magazine, 8k resolution")}?width=1200&height=800&nologo=true`;
@@ -99,7 +116,7 @@ function ArticlePage() {
     <div className="min-h-screen bg-[#0a0a0a] font-sans text-gray-200">
       {/* Top Bar */}
       <header className="bg-[#111] text-white py-5 px-6 shadow-md sticky top-0 z-50 border-b border-[#222]">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+        <div className="max-w-7xl mx-auto flex justify-between items-center">
           <Link to="/" className="flex flex-col gap-1 hover:opacity-80 transition-opacity">
             <span className="text-2xl font-serif tracking-widest uppercase font-bold text-[#C6A87C]">RESET</span>
             <span className="text-[10px] uppercase tracking-widest text-gray-500">O Blog do Homem Sábio</span>
@@ -107,94 +124,142 @@ function ArticlePage() {
         </div>
       </header>
 
-      <main className="max-w-4xl mx-auto py-16 px-6">
-        <Link to="/" className="text-gray-400 hover:text-white transition-colors flex items-center gap-2 mb-10 font-medium uppercase tracking-widest text-sm">
-          <ArrowLeft className="w-4 h-4" /> Voltar ao Blog
-        </Link>
+      {/* Main Layout Container */}
+      <main className="max-w-7xl mx-auto py-12 px-6 flex flex-col lg:flex-row gap-12 lg:gap-20">
+        
+        {/* Main Article Column */}
+        <article className="flex-1 w-full lg:max-w-3xl mx-auto">
+          {/* Breadcrumb / Back */}
+          <nav className="mb-10 flex items-center text-xs uppercase tracking-widest text-gray-500 font-medium">
+            <Link to="/" className="hover:text-white transition-colors">Início</Link>
+            <ChevronRight className="w-3 h-3 mx-2" />
+            <span className="text-[#C6A87C]">{article.category || "Artigo"}</span>
+          </nav>
 
-        <article>
-          <div className="text-center mb-12">
-            {article.category && (
-              <span className="inline-block px-3 py-1 bg-[#222] text-[#C6A87C] text-[10px] uppercase tracking-widest mb-6 border border-[#333]">
-                {article.category}
-              </span>
-            )}
-            <h1 className="text-4xl md:text-6xl font-serif text-white mb-6 leading-tight">
+          <div className="mb-12">
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-8 leading-tight tracking-tight">
               {article.title}
             </h1>
-            <div className="flex items-center justify-center gap-4 text-gray-500 uppercase tracking-widest text-xs font-semibold">
-              <span className="text-[#C6A87C]">{authorName}</span>
+            
+            <div className="flex items-center gap-4 text-gray-500 uppercase tracking-widest text-xs font-semibold pb-8 border-b border-[#222]">
+              <span className="text-white bg-[#C6A87C] px-3 py-1 rounded-sm text-[10px]">{article.category}</span>
+              <span className="text-gray-400">Por <span className="text-white">{authorName}</span></span>
               <span>•</span>
               <time dateTime={safeDate.toISOString()} className="flex items-center gap-1">
                 <Clock className="w-3 h-3" />
-                {safeDate.toLocaleString("pt-BR", {
-                  day: "2-digit",
-                  month: "long",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                })}
+                {safeDate.toLocaleString("pt-BR", { day: "2-digit", month: "short", year: "numeric" })}
               </time>
             </div>
           </div>
 
+          {/* Hero Image - Sem o mix-blend, 100% colorida e premium */}
           {finalImageUrl && (
-            <div className="relative mb-16 shadow-xl border border-[#222]">
+            <div className="relative mb-16 rounded-xl overflow-hidden shadow-2xl">
               <AIImage 
                 src={finalImageUrl} 
                 alt={article.title} 
-                className="w-full h-[500px] object-cover mix-blend-luminosity opacity-80"
+                className="w-full h-[400px] md:h-[500px] object-cover"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none" />
             </div>
           )}
 
+          {/* Conteúdo do Artigo */}
           <div 
-            className="prose prose-lg prose-invert max-w-none text-gray-300 leading-[2] font-light
-                       prose-headings:font-serif prose-headings:text-[#C6A87C] prose-headings:font-normal
-                       prose-h2:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:border-b prose-h2:border-[#222] prose-h2:pb-4
-                       prose-p:mb-8 prose-a:text-[#C6A87C] prose-a:font-semibold hover:prose-a:text-white
-                       prose-blockquote:border-l-[#C6A87C] prose-blockquote:bg-[#111] prose-blockquote:p-4 prose-blockquote:text-gray-400 prose-blockquote:italic
-                       prose-img:shadow-xl prose-img:border prose-img:border-[#222]
-                       prose-strong:text-white prose-strong:font-semibold"
+            className="prose prose-xl prose-invert max-w-none text-gray-300 leading-relaxed font-light
+                       prose-headings:font-serif prose-headings:text-white prose-headings:font-normal
+                       prose-h2:text-3xl prose-h2:md:text-4xl prose-h2:mt-16 prose-h2:mb-8 prose-h2:pb-4 prose-h2:border-b prose-h2:border-[#222]
+                       prose-h3:text-2xl prose-h3:text-[#C6A87C]
+                       prose-p:mb-8 prose-p:tracking-wide
+                       prose-a:text-[#C6A87C] prose-a:font-medium hover:prose-a:text-white prose-a:underline-offset-4
+                       prose-blockquote:border-l-4 prose-blockquote:border-[#C6A87C] prose-blockquote:bg-[#111] prose-blockquote:p-6 prose-blockquote:text-gray-400 prose-blockquote:italic prose-blockquote:rounded-r-lg
+                       prose-img:rounded-xl prose-img:shadow-2xl prose-img:border border-[#222] prose-img:my-12
+                       prose-strong:text-white prose-strong:font-medium"
             dangerouslySetInnerHTML={{ __html: article.content }}
           />
           
-          <div className="mt-16 pt-8 border-t border-[#222] flex flex-col items-center text-center">
-            <div className="w-16 h-16 rounded-full bg-[#111] border border-[#333] flex items-center justify-center mb-4">
-              <span className="text-2xl font-serif text-[#C6A87C]">{authorName.charAt(0)}</span>
+          {/* Author Box */}
+          <div className="mt-20 pt-10 border-t border-[#222] flex flex-col md:flex-row items-center md:items-start gap-6 bg-[#111] p-8 rounded-xl">
+            <div className="w-20 h-20 shrink-0 rounded-full bg-black border border-[#333] flex items-center justify-center">
+              <span className="text-3xl font-serif text-[#C6A87C]">{authorName.charAt(0)}</span>
             </div>
-            <h4 className="text-xl font-serif text-white mb-2">{authorName}</h4>
-            <p className="text-gray-500 text-sm max-w-md">Especialista responsável pelas publicações do pilar {article.category} no RESET.</p>
+            <div className="text-center md:text-left">
+              <h4 className="text-xl font-serif text-white mb-2">{authorName}</h4>
+              <p className="text-gray-400 leading-relaxed">Redator especialista em {article.category} no RESET. Focado em trazer análises profundas e guias definitivos para o homem moderno que busca excelência e alta performance em todas as áreas da vida.</p>
+            </div>
           </div>
+
+          {/* Related Articles Bottom */}
+          {related.length > 0 && (
+            <div className="mt-20 pt-16 border-t border-[#222]">
+              <h3 className="text-xl font-serif text-white mb-8 border-l-4 border-[#C6A87C] pl-4">
+                Veja Também em {article.category}
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {related.map(rel => (
+                  <Link to={`/${rel.slug}`} key={rel.id} className="group bg-[#111] border border-[#222] hover:border-[#C6A87C]/50 rounded-lg overflow-hidden transition-all flex flex-col">
+                    <div className="relative h-40 overflow-hidden bg-black">
+                      <AIImage 
+                        src={rel.imageUrl?.startsWith("http") && !rel.imageUrl.includes("unsplash.com") ? rel.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", " + (rel.category || "lifestyle") + ", ultra realistic editorial photography")}?width=600&height=400&nologo=true`} 
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-105 transition-all duration-700" 
+                        alt={rel.title} 
+                      />
+                    </div>
+                    <div className="p-5 flex-1 flex flex-col">
+                      <h4 className="text-base font-serif text-white mb-4 group-hover:text-[#C6A87C] transition-colors line-clamp-3 leading-snug">{rel.title}</h4>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-widest mt-auto">Ler Artigo →</p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </article>
 
-        {related.length > 0 && (
-          <div className="mt-24 pt-16 border-t border-[#222]">
-            <h3 className="text-2xl font-serif text-[#C6A87C] mb-8 uppercase tracking-widest text-center">
-              Continue Evoluindo
+        {/* Sidebar */}
+        <aside className="w-full lg:w-[320px] shrink-0">
+          <div className="sticky top-28">
+            <h3 className="text-sm font-serif text-white mb-6 uppercase tracking-widest border-b border-[#222] pb-4 flex items-center justify-between">
+              <span>Últimos Artigos</span>
+              <span className="w-2 h-2 bg-[#C6A87C] rounded-full"></span>
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {related.map(rel => (
-                <Link to={`/${rel.slug}`} key={rel.id} className="group bg-[#111] border border-[#222] hover:border-[#C6A87C]/50 transition-all p-4 flex flex-col">
-                  <div className="relative h-40 mb-4 overflow-hidden bg-black">
+            
+            <div className="flex flex-col gap-6">
+              {latest.map((item, index) => (
+                <Link to={`/${item.slug}`} key={item.id} className="group flex gap-4 items-start">
+                  <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-[#111] border border-[#222] group-hover:border-[#C6A87C]/50 transition-colors">
                     <AIImage 
-                      src={rel.imageUrl?.startsWith("http") && !rel.imageUrl.includes("unsplash.com") ? rel.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(rel.title + ", " + (rel.category || "lifestyle") + ", ultra realistic editorial photography")}?width=600&height=400&nologo=true`} 
-                      className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" 
-                      alt={rel.title} 
+                      src={item.imageUrl?.startsWith("http") && !item.imageUrl.includes("unsplash.com") ? item.imageUrl : `https://image.pollinations.ai/prompt/${encodeURIComponent(item.title + ", " + (item.category || "lifestyle") + ", ultra realistic photography")}?width=200&height=200&nologo=true`} 
+                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500" 
+                      alt={item.title} 
                     />
                   </div>
-                  <h4 className="text-lg font-serif text-white mb-2 group-hover:text-[#C6A87C] transition-colors line-clamp-2">{rel.title}</h4>
-                  <p className="text-xs text-gray-500 uppercase tracking-widest mt-auto">Ler Artigo →</p>
+                  <div className="flex flex-col flex-1 pt-1">
+                    <span className="text-[9px] text-[#C6A87C] uppercase tracking-widest mb-1.5 font-semibold">{item.category || "Lifestyle"}</span>
+                    <h4 className="text-sm font-serif text-gray-200 group-hover:text-white transition-colors line-clamp-3 leading-snug">{item.title}</h4>
+                  </div>
                 </Link>
               ))}
             </div>
+
+            {/* Newsletter or Ad Space Banner */}
+            <div className="mt-12 bg-[#111] border border-[#222] p-6 rounded-xl text-center">
+              <div className="w-12 h-12 bg-[#C6A87C]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-[#C6A87C] font-serif text-xl">R</span>
+              </div>
+              <h4 className="font-serif text-lg text-white mb-2">Assine a RESET</h4>
+              <p className="text-xs text-gray-400 leading-relaxed mb-6">Receba as melhores estratégias de alta performance diretamente no seu email semanalmente.</p>
+              <button className="w-full bg-[#C6A87C] hover:bg-white text-black text-xs uppercase tracking-widest font-semibold py-3 px-4 rounded transition-colors">
+                Inscrever-se
+              </button>
+            </div>
           </div>
-        )}
+        </aside>
+
       </main>
       
       <footer className="bg-[#111] border-t border-[#222] text-gray-500 py-16 text-center text-sm tracking-widest uppercase mt-20 flex flex-col items-center">
         <h2 className="font-serif text-2xl font-bold tracking-widest text-[#C6A87C] mb-1">RESET</h2>
-
         <p className="text-[10px] text-gray-500 uppercase tracking-widest mb-8">O Blog do Homem Sábio</p>
         <p>© 2026 Todos os direitos reservados.</p>
       </footer>
